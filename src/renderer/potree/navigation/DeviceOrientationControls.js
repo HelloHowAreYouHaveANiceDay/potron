@@ -13,10 +13,11 @@
  *
  *
  */
+import * as THREE from 'three';
 
 import { EventDispatcher } from '../EventDispatcher.js';
 
-export class DeviceOrientationControls extends EventDispatcher {
+export default class DeviceOrientationControls extends EventDispatcher {
   constructor(viewer) {
     super();
 
@@ -32,7 +33,7 @@ export class DeviceOrientationControls extends EventDispatcher {
       this.deviceOrientation = e;
     };
 
-    const screenOrientationChange = (e) => {
+    const screenOrientationChange = (e) => { // eslint-disable-line
       this.screenOrientation = window.orientation || 0;
     };
 
@@ -51,7 +52,7 @@ export class DeviceOrientationControls extends EventDispatcher {
     this.scene = scene;
   }
 
-  update(delta) {
+  update(delta) { // eslint-disable-line
     const computeQuaternion = function (alpha, beta, gamma, orient) {
       const quaternion = new THREE.Quaternion();
 
@@ -73,7 +74,7 @@ export class DeviceOrientationControls extends EventDispatcher {
       const orient = this.screenOrientation ? THREE.Math.degToRad(this.screenOrientation) : 0;
 
       const quaternion = computeQuaternion(alpha, beta, gamma, orient);
-      viewer.scene.cameraP.quaternion.set(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+      viewer.scene.cameraP.quaternion.set(quaternion.x, quaternion.y, quaternion.z, quaternion.w); // eslint-disable-line
     }
   }
 }

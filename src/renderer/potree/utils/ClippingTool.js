@@ -1,9 +1,11 @@
+import * as THREE from 'three';
+import $ from 'jquery';
 
 import { ClipVolume } from './ClipVolume.js';
 import { PolygonClipVolume } from './PolygonClipVolume.js';
 import { EventDispatcher } from '../EventDispatcher.js';
 
-export class ClippingTool extends EventDispatcher {
+export default class ClippingTool extends EventDispatcher {
   constructor(viewer) {
     super();
 
@@ -11,7 +13,7 @@ export class ClippingTool extends EventDispatcher {
 
     this.maxPolygonVertices = 8;
 
-    this.addEventListener('start_inserting_clipping_volume', (e) => {
+    this.addEventListener('start_inserting_clipping_volume', (e) => { // eslint-disable-line
       this.viewer.dispatchEvent({
         type: 'cancel_insertions',
       });
@@ -110,11 +112,11 @@ export class ClippingTool extends EventDispatcher {
         polyClipVol.addMarker();
 
         // SVC Screen Line
-        svg.find('polyline').each((index, target) => {
+        svg.find('polyline').each((index, target) => { // eslint-disable-line
           const newPoint = svg[0].createSVGPoint();
           newPoint.x = e.offsetX;
           newPoint.y = e.offsetY;
-          const polyline = target.points.appendItem(newPoint);
+          // const polyline = target.points.appendItem(newPoint);
         });
 
 
@@ -129,7 +131,7 @@ export class ClippingTool extends EventDispatcher {
       }
     };
 
-    cancel.callback = (e) => {
+    cancel.callback = (e) => { // eslint-disable-line
       // let first = svg.find("polyline")[0].points[0];
       // svg.find("polyline").each((index, target) => {
       //	let newPoint = svg[0].createSVGPoint();

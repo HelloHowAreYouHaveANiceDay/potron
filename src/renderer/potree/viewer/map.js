@@ -1,8 +1,12 @@
+import * as THREE from 'three';
+import $ from 'jquery';
+import proj4 from 'proj4';
+import ol from 'ol';
 
 // http://epsg.io/
 proj4.defs('UTM10N', '+proj=utm +zone=10 +ellps=GRS80 +datum=NAD83 +units=m +no_defs');
 
-export class MapView {
+export default class MapView {
   constructor(viewer) {
     this.viewer = viewer;
 
@@ -18,7 +22,7 @@ export class MapView {
     this.sourcesLabelLayer = null;
     this.enabled = false;
 
-    this.createAnnotationStyle = text => [
+    this.createAnnotationStyle = () => [
       new ol.style.Style({
         image: new ol.style.Circle({
           radius: 10,
@@ -126,7 +130,7 @@ export class MapView {
       link.appendChild(button);
 
       const handleDownload = (e) => {
-        const features = selectedFeatures.getArray();
+        const features = selectedFeatures.getArray(); // eslint-disable-line
 
         const url = [document.location.protocol, '//', document.location.host, document.location.pathname].join('');
 
@@ -252,7 +256,7 @@ export class MapView {
       }
     });
 
-    dragBox.on('boxend', (e) => {
+    dragBox.on('boxend', () => {
       // features that intersect the box are added to the collection of
       // selected features, and their names are displayed in the "info"
       // div
@@ -263,7 +267,7 @@ export class MapView {
     });
 
     // clear selection when drawing a new box and when clicking on the map
-    dragBox.on('boxstart', (e) => {
+    dragBox.on('boxstart', () => {
       selectedFeatures.clear();
     });
     this.map.on('click', () => {
@@ -292,7 +296,7 @@ export class MapView {
       });
       feature.setStyle(this.createAnnotationStyle(annotation.title));
 
-      feature.onHover = (evt) => {
+      feature.onHover = () => {
         const coordinates = feature.getGeometry().getCoordinates();
         const p = this.map.getPixelFromCoordinate(coordinates);
 
@@ -302,7 +306,7 @@ export class MapView {
         this.elTooltip.css('top', `${p[1]}px`);
       };
 
-      feature.onClick = (evt) => {
+      feature.onClick = () => {
         annotation.clickTitle();
       };
 
@@ -643,7 +647,7 @@ export class MapView {
     }
   }
 
-  update(delta) {
+  update() {
     if (!this.sceneProjection) {
       return;
     }

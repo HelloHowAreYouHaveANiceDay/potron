@@ -1,8 +1,11 @@
 
+import $ from 'jquery';
+import Potree from '../../Potree';
+
 
 import { MeasurePanel } from './MeasurePanel.js';
 
-export class PointPanel extends MeasurePanel {
+export default class PointPanel extends MeasurePanel {
   constructor(viewer, measurement, propertiesPanel) {
     super(viewer, measurement, propertiesPanel);
 

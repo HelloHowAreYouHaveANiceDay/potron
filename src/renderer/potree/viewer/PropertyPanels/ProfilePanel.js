@@ -1,8 +1,12 @@
 
+import $ from 'jquery';
+import * as THREE from 'three';
+import Potree from '../../Potree';
+
 
 import { MeasurePanel } from './MeasurePanel.js';
 
-export class ProfilePanel extends MeasurePanel {
+export default class ProfilePanel extends MeasurePanel {
   constructor(viewer, measurement, propertiesPanel) {
     super(viewer, measurement, propertiesPanel);
 
@@ -59,19 +63,19 @@ export class ProfilePanel extends MeasurePanel {
         step: 0.01,
         numberFormat: 'n',
         start: () => {},
-        spin: (event, ui) => {
+        spin: (event, ui) => { // eslint-disable-line
           const value = elWidthSlider.spinner('value');
           measurement.setWidth(value);
         },
-        change: (event, ui) => {
+        change: (event, ui) => {// eslint-disable-line
           const value = elWidthSlider.spinner('value');
           measurement.setWidth(value);
         },
-        stop: (event, ui) => {
+        stop: (event, ui) => {// eslint-disable-line
           const value = elWidthSlider.spinner('value');
           measurement.setWidth(value);
         },
-        incremental: (count) => {
+        incremental: (count) => {// eslint-disable-line
           const value = elWidthSlider.spinner('value');
           const step = elWidthSlider.spinner('option', 'step');
 
@@ -84,7 +88,7 @@ export class ProfilePanel extends MeasurePanel {
       elWidthSlider.spinner('value', measurement.getWidth());
       elWidthSlider.spinner('widget').css('width', '100%');
 
-      const widthListener = (event) => {
+      const widthListener = (event) => {// eslint-disable-line
         const value = elWidthSlider.spinner('value');
         if (value !== measurement.getWidth()) {
           elWidthSlider.spinner('value', measurement.getWidth());
@@ -189,7 +193,7 @@ export class ProfilePanel extends MeasurePanel {
     const info = (message) => {
       elMessage.html(`${message}`);
     };
-
+    /* eslint-disable */
     let handle = null;
     { // START FILTER
       const url = `${viewer.server}/create_regions_filter?pointclouds=[${pointcloudsArg}]&regions=[${regionsArg}]`;
@@ -213,7 +217,7 @@ export class ProfilePanel extends MeasurePanel {
       const url = `${viewer.server}/check_regions_filter?handle=${handle}`;
 
       const sleep = (function (duration) {
-        return new Promise((res, rej) => {
+        return new Promise((res, rej) => {// eslint-disable-line
           setTimeout(() => {
             res();
           }, duration);

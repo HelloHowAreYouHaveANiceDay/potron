@@ -3,13 +3,13 @@
  *
  *
  */
-
+import * as THREE from 'three';
 
 import { KeyCodes } from '../KeyCodes';
 import { Utils } from '../utils';
 import { EventDispatcher } from '../EventDispatcher.js';
 
-export class InputHandler extends EventDispatcher {
+export default class InputHandler extends EventDispatcher {
   constructor(viewer) {
     super();
 
@@ -254,7 +254,7 @@ export class InputHandler extends EventDispatcher {
     e.preventDefault();
 
     let consumed = false;
-    const consume = () => consumed = true;
+    const consume = () => consumed = true; // eslint-disable-line
     if (this.hoveredElements.length === 0) {
       for (const inputListener of this.getSortedListeners()) {
         inputListener.dispatchEvent({
@@ -306,7 +306,7 @@ export class InputHandler extends EventDispatcher {
 
 
     let consumed = false;
-    const consume = () => consumed = true;
+    const consume = () => consumed = true; // eslint-disable-line
     if (this.hoveredElements.length === 0) {
       for (const inputListener of this.getSortedListeners()) {
         inputListener.dispatchEvent({
@@ -431,7 +431,7 @@ export class InputHandler extends EventDispatcher {
             type: 'drag',
             drag: this.drag,
             viewer: this.viewer,
-            consume: () => { dragConsumed = true; },
+            consume: () => { dragConsumed = true; }, // eslint-disable-line
           });
 
           if (dragConsumed) {
@@ -440,8 +440,8 @@ export class InputHandler extends EventDispatcher {
         }
       }
     } else {
-      const curr = hoveredElements.map(a => a.object).find(a => true);
-      const prev = this.hoveredElements.map(a => a.object).find(a => true);
+      const curr = hoveredElements.map(a => a.object).find(a => true); // eslint-disable-line
+      const prev = this.hoveredElements.map(a => a.object).find(a => true); // eslint-disable-line
 
       if (curr !== prev) {
         if (curr) {
@@ -532,7 +532,7 @@ export class InputHandler extends EventDispatcher {
     }
   }
 
-  getMousePointCloudIntersection(mouse) {
+  getMousePointCloudIntersection(mouse) { // eslint-disable-line
     return Utils.getMousePointCloudIntersection(
       this.mouse,
       this.scene.getActiveCamera(),
@@ -679,9 +679,9 @@ export class InputHandler extends EventDispatcher {
     this.scene = scene;
   }
 
-  update(delta) {
+  // update(delta) {
 
-  }
+  // }
 
   getNormalizedDrag() {
     if (!this.drag) {

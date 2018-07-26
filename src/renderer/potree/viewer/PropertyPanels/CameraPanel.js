@@ -1,7 +1,9 @@
+import $ from 'jquery';
+import Potree from '../Potree';
 
 import { Utils } from '../../utils.js';
 
-export class CameraPanel {
+export default class CameraPanel {
   constructor(viewer, propertiesPanel) {
     this.viewer = viewer;
     this.propertiesPanel = propertiesPanel;

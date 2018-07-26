@@ -1,18 +1,20 @@
+import * as THREE from 'three';
 
+import Potree from '../Potree';
 import { PointCloudSM } from '../utils/PointCloudSM.js';
 import { EyeDomeLightingMaterial } from '../materials/EyeDomeLightingMaterial.js';
 import { PointColorType } from '../defines.js';
 import { SphereVolume } from '../utils/Volume.js';
 import { Utils } from '../utils.js';
 
-export class EDLRenderer {
+export default class EDLRenderer {
   constructor(viewer) {
     this.viewer = viewer;
 
     this.edlMaterial = null;
 
-    this.rtRegular;
-    this.rtEDL;
+    this.rtRegular = null;
+    this.rtEDL = null;
 
     this.gl = viewer.renderer.context;
 
@@ -70,6 +72,7 @@ export class EDLRenderer {
   }
 
   makeScreenshot(camera, size, callback) {
+    console.log(callback);
     if (camera === undefined || camera === null) {
       camera = this.viewer.scene.getActiveCamera();
     }
@@ -82,8 +85,8 @@ export class EDLRenderer {
 
     // let maxTextureSize = viewer.renderer.capabilities.maxTextureSize;
     // if(width * 4 <
-    width = 2 * width;
-    height = 2 * height;
+    width = 2 * width; // eslint-disable-line
+    height = 2 * height; // eslint-disable-line
 
     const target = new THREE.WebGLRenderTarget(width, height, {
       format: THREE.RGBAFormat,
@@ -134,10 +137,10 @@ export class EDLRenderer {
     if (this.screenshot) {
       const oldBudget = Potree.pointBudget;
       Potree.pointBudget = Math.max(10 * 1000 * 1000, 2 * oldBudget);
-      const result = Potree.updatePointClouds(
-        viewer.scene.pointclouds,
-        viewer.scene.getActiveCamera(),
-        viewer.renderer);
+      // const result = Potree.updatePointClouds(
+      //   viewer.scene.pointclouds,
+      //   viewer.scene.getActiveCamera(),
+      //   viewer.renderer);
       Potree.pointBudget = oldBudget;
     }
 

@@ -1,8 +1,10 @@
+import $ from 'jquery';
+import Potree from '../../Potree';
 
 
 import { Utils } from '../../utils.js';
 
-export class MeasurePanel {
+export default class MeasurePanel {
   constructor(viewer, measurement, propertiesPanel) {
     this.viewer = viewer;
     this.measurement = measurement;

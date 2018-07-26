@@ -13,13 +13,15 @@
  *
  */
 
+import * as THREE from 'three';
+import TWEEN from '@tweenjs/tweenjs';
 
 import { MOUSE } from '../defines.js';
 import { Utils } from '../utils.js';
 import { EventDispatcher } from '../EventDispatcher.js';
 
 
-export class FirstPersonControls extends EventDispatcher {
+export default class FirstPersonControls extends EventDispatcher {
   constructor(viewer) {
     super();
 
@@ -77,7 +79,7 @@ export class FirstPersonControls extends EventDispatcher {
       }
     };
 
-    const drop = (e) => {
+    const drop = (e) => { // eslint-disable-line
       this.dispatchEvent({ type: 'end' });
     };
 

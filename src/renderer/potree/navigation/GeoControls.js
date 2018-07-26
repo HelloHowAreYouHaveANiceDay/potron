@@ -20,16 +20,17 @@
  *
  *
  */
+import * as THREE from 'three';
 
 import { EventDispatcher } from '../EventDispatcher.js';
 import { KeyCodes } from '../KeyCodes.js';
 
-export class GeoControls extends EventDispatcher {
+export default class GeoControls extends EventDispatcher {
   constructor(object, domElement) {
     super();
 
     console.log('deprecated?');
-
+    /* eslint-disable */
     this.object = object;
     this.domElement = (domElement !== undefined) ? domElement : document;
 
@@ -72,9 +73,9 @@ export class GeoControls extends EventDispatcher {
 
     // events
 
-    const changeEvent = { type: 'change' };
-    const startEvent = { type: 'start' };
-    const endEvent = { type: 'end' };
+    // const changeEvent = { type: 'change' };
+    // const startEvent = { type: 'start' };
+    // const endEvent = { type: 'end' };
 
     this.domElement.addEventListener('contextmenu', (event) => { event.preventDefault(); }, false);
     this.domElement.addEventListener('mousedown', this.onMouseDown.bind(this), false);
@@ -99,6 +100,7 @@ export class GeoControls extends EventDispatcher {
   }
 
   setTrackPos(trackPos, _preserveRelativeRotation) {
+    console.log(_preserveRelativeRotation);
     // TODO Unused: let preserveRelativeRotation = _preserveRelativeRotation || false;
 
     const newTrackPos = Math.max(0, Math.min(1, trackPos));

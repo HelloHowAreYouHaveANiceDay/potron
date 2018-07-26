@@ -1,14 +1,17 @@
 
+import $ from 'jquery';
+import * as THREE from 'three';
+import Potree from '../../Potree';
 
 import { Utils } from '../../utils.js';
 import { PointCloudTree } from '../../PointCloudTree.js';
 import { Measure } from '../../utils/Measure.js';
 import { Profile } from '../../utils/Profile.js';
-import { Volume, BoxVolume, SphereVolume } from '../../utils/Volume.js';
+import { Volume } from '../../utils/Volume.js';
 import { PointSizeType, PointShape } from '../../defines.js';
 import { Gradients } from '../../materials/Gradients.js';
 
-import { MeasurePanel } from './MeasurePanel.js';
+// import { MeasurePanel } from './MeasurePanel.js';
 import { DistancePanel } from './DistancePanel.js';
 import { PointPanel } from './PointPanel.js';
 import { AreaPanel } from './AreaPanel.js';
@@ -18,7 +21,7 @@ import { VolumePanel } from './VolumePanel.js';
 import { ProfilePanel } from './ProfilePanel.js';
 import { CameraPanel } from './CameraPanel.js';
 
-export class PropertiesPanel {
+export default class PropertiesPanel {
   constructor(container, viewer) {
     this.container = container;
     this.viewer = viewer;
@@ -216,7 +219,7 @@ export class PropertiesPanel {
         slide(event, ui) { material.size = ui.value; },
       });
 
-      const update = (e) => {
+      const update = (e) => { // eslint-disable-line
         lblPointSize.html(material.size.toFixed(2));
         sldPointSize.slider({ value: material.size });
       };
@@ -274,7 +277,7 @@ export class PropertiesPanel {
         },
       });
 
-      const update = (e) => {
+      const update = (e) => { // eslint-disable-line
         lblOpacity.html(material.opacity.toFixed(2));
         sldOpacity.slider({ value: material.opacity });
       };
@@ -305,7 +308,7 @@ export class PropertiesPanel {
         attributeSelection.append(elOption);
       }
 
-      const updateMaterialPanel = (event, ui) => {
+      const updateMaterialPanel = (event, ui) => { // eslint-disable-line
         const selectedValue = attributeSelection.selectmenu().val();
         material.pointColorType = Utils.toMaterialID(selectedValue);
 
@@ -437,8 +440,8 @@ export class PropertiesPanel {
         step: 0.01,
         values: [0, 1],
         slide: (event, ui) => {
-          const min = (Number(ui.values[0]) === 0) ? 0 : parseInt(Math.pow(2, 16 * ui.values[0]));
-          const max = parseInt(Math.pow(2, 16 * ui.values[1]));
+          const min = (Number(ui.values[0]) === 0) ? 0 : parseInt(Math.pow(2, 16 * ui.values[0])); // eslint-disable-line
+          const max = parseInt(Math.pow(2, 16 * ui.values[1])); // eslint-disable-line
           material.intensityRange = [min, max];
         },
       });
@@ -652,7 +655,7 @@ export class PropertiesPanel {
     this.container.append(panel.elContent);
   }
 
-  setCamera(camera) {
+  setCamera(camera) { // eslint-disable-line
     const panel = new CameraPanel(this.viewer, this);
     this.container.append(panel.elContent);
   }

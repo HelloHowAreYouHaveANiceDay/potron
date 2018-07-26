@@ -7,8 +7,9 @@
  * @author Mugen87 / http://github.com/Mugen87
  * @author mschuetz / http://potree.org
  */
+import * as THREE from 'three';
 
-export class Box3Helper extends THREE.LineSegments {
+export default class Box3Helper extends THREE.LineSegments {
   constructor(box, color) {
     if (color === undefined) color = 0xffff00;
 

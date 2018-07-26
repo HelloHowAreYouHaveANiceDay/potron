@@ -1,4 +1,4 @@
-
+import * as THREE from 'three';
 
 import { NormalizationMaterial } from '../materials/NormalizationMaterial.js';
 import { NormalizationEDLMaterial } from '../materials/NormalizationEDLMaterial.js';
@@ -8,7 +8,7 @@ import { SphereVolume } from '../utils/Volume.js';
 import { Utils } from '../utils.js';
 
 
-export class HQSplatRenderer {
+export default class HQSplatRenderer {
   constructor(viewer) {
     this.viewer = viewer;
 

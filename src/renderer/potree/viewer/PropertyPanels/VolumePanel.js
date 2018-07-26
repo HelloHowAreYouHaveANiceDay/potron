@@ -1,10 +1,14 @@
 
+import $ from 'jquery';
+import * as THREE from 'three';
+import Potree from '../../Potree';
+
 import { Utils } from '../../utils.js';
-import { Volume, BoxVolume, SphereVolume } from '../../utils/Volume.js';
+import { BoxVolume, SphereVolume } from '../../utils/Volume.js';
 
 import { MeasurePanel } from './MeasurePanel.js';
 
-export class VolumePanel extends MeasurePanel {
+export default class VolumePanel extends MeasurePanel {
   constructor(viewer, measurement, propertiesPanel) {
     super(viewer, measurement, propertiesPanel);
 
@@ -242,7 +246,7 @@ export class VolumePanel extends MeasurePanel {
     const info = (message) => {
       elMessage.html(`${message}`);
     };
-
+    /* eslint-disable */
     let handle = null;
     { // START FILTER
       const url = `${viewer.server}/create_regions_filter?pointclouds=[${pointcloudsArg}]&regions=[${regionsArg}]`;

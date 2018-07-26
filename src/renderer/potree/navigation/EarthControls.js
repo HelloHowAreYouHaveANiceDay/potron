@@ -1,10 +1,11 @@
-
+import * as THREE from 'three.js';
+import TWEEN from '@tweenjs/tweenjs';
 
 import { MOUSE } from '../defines.js';
 import { Utils } from '../utils.js';
 import { EventDispatcher } from '../EventDispatcher.js';
 
-export class EarthControls extends EventDispatcher {
+export default class EarthControls extends EventDispatcher {
   constructor(viewer) {
     super(viewer);
 
@@ -129,11 +130,11 @@ export class EarthControls extends EventDispatcher {
       }
     };
 
-    const drop = (e) => {
+    const drop = (e) => { // eslint-disable-line
       this.dispatchEvent({ type: 'end' });
     };
 
-    const onMouseUp = (e) => {
+    const onMouseUp = (e) => { // eslint-disable-line
       this.camStart = null;
       this.pivot = null;
       this.pivotIndicator.visible = false;
@@ -229,7 +230,7 @@ export class EarthControls extends EventDispatcher {
 
   update(delta) {
     const view = this.scene.view;
-    const fade = Math.pow(0.5, this.fadeFactor * delta);
+    const fade = Math.pow(0.5, this.fadeFactor * delta); // eslint-disable-line
     const progression = 1 - fade;
     const camera = this.scene.getActiveCamera();
 

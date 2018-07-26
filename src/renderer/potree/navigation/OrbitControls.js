@@ -12,14 +12,15 @@
  *
  *
  */
-
+import * as THREE from 'three';
+import TWEEN from '@tweenjs/tweenjs';
 
 import { MOUSE } from '../defines.js';
 import { Utils } from '../utils.js';
 import { EventDispatcher } from '../EventDispatcher.js';
 
 
-export class OrbitControls extends EventDispatcher {
+export default class OrbitControls extends EventDispatcher {
   constructor(viewer) {
     super();
 
@@ -68,7 +69,7 @@ export class OrbitControls extends EventDispatcher {
       }
     };
 
-    const drop = (e) => {
+    const drop = (e) => { // eslint-disable-line
       this.dispatchEvent({ type: 'end' });
     };
 
