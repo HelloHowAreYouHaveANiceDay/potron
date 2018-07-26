@@ -1,5 +1,6 @@
+import * as THREE from 'three';
 
-export class NavigationCube extends THREE.Object3D {
+export default class NavigationCube extends THREE.Object3D {
   constructor(viewer) {
     super();
 

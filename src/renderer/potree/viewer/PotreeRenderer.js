@@ -1,5 +1,6 @@
+import Potree from '../Potree';
 
-export class PotreeRenderer {
+export default class PotreeRenderer {
   constructor(viewer) {
     this.viewer = viewer;
   }
