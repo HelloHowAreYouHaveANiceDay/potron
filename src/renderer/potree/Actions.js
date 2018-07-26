@@ -2,7 +2,7 @@
 
 import { EventDispatcher } from './EventDispatcher.js';
 
-export class Action extends EventDispatcher {
+export default class Action extends EventDispatcher {
   constructor(args = {}) {
     super();
 
@@ -14,13 +14,12 @@ export class Action extends EventDispatcher {
     }
   }
 
-  onclick(event) {
+  // onclick(event) {
+  // }
 
-  }
+  // pairWith(object) {
 
-  pairWith(object) {
-
-  }
+  // }
 
   setIcon(newIcon) {
     const oldIcon = this.icon;

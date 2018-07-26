@@ -1,7 +1,8 @@
+import * as THREE from 'three';
 
 import { OrbitControls } from '../navigation/OrbitControls.js';
 
-export class View {
+export default class View {
   constructor() {
     this.position = new THREE.Vector3(0, 0, 0);
 
@@ -62,7 +63,7 @@ export class View {
     if (arguments.length === 1) {
       V = new THREE.Vector3().subVectors(t, this.position);
     } else if (arguments.length === 3) {
-      V = new THREE.Vector3().subVectors(new THREE.Vector3(...arguments), this.position);
+      V = new THREE.Vector3().subVectors(new THREE.Vector3(...arguments), this.position); // eslint-disable-line
     }
 
     const radius = V.length();

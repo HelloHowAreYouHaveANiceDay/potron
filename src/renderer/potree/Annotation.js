@@ -1,19 +1,21 @@
-
+import * as THREE from 'three';
+import $ from 'jquery';
+import TWEEN from '@tweenjs/tweenjs';
 
 import { Action } from './Actions.js';
 import { Utils } from './utils.js';
 import { EventDispatcher } from './EventDispatcher.js';
 
-export class Annotation extends EventDispatcher {
+export default class Annotation extends EventDispatcher {
   constructor(args = {}) {
     super();
 
-    const valueOrDefault = (a, b) => {
-      if (a === null || a === undefined) {
-        return b;
-      }
-      return a;
-    };
+    // const valueOrDefault = (a, b) => {
+    //   if (a === null || a === undefined) {
+    //     return b;
+    //   }
+    //   return a;
+    // };
 
     this.scene = null;
     this._title = args.title || 'No Title';
@@ -102,16 +104,16 @@ export class Annotation extends EventDispatcher {
     }
 
     this.elDescriptionClose.hover(
-      e => this.elDescriptionClose.css('opacity', '1'),
-      e => this.elDescriptionClose.css('opacity', '0.5'),
+      () => this.elDescriptionClose.css('opacity', '1'),
+      () => this.elDescriptionClose.css('opacity', '0.5'),
     );
-    this.elDescriptionClose.click(e => this.setHighlighted(false));
+    this.elDescriptionClose.click(() => this.setHighlighted(false));
     // this.elDescriptionContent.html(this._description);
 
-    this.domElement.mouseenter(e => this.setHighlighted(true));
-    this.domElement.mouseleave(e => this.setHighlighted(false));
+    this.domElement.mouseenter(() => this.setHighlighted(true));
+    this.domElement.mouseleave(() => this.setHighlighted(false));
 
-    this.domElement.on('touchstart', (e) => {
+    this.domElement.on('touchstart', () => {
       this.setHighlighted(!this.isHighlighted);
     });
 
@@ -178,6 +180,7 @@ export class Annotation extends EventDispatcher {
 
     $(this.domElement).draggable({
       start: (event, ui) => {
+        console.log(ui);
         annotationStartPos = this.position.clone();
         annotationStartOffset = this.offset.clone();
         $(this.domElement).find('.annotation-titlebar').css('pointer-events', 'none');
@@ -189,7 +192,7 @@ export class Annotation extends EventDispatcher {
       },
       drag: (event, ui) => {
         const renderAreaWidth = viewer.renderer.getSize().width;
-        const renderAreaHeight = viewer.renderer.getSize().height;
+        // const renderAreaHeight = viewer.renderer.getSize().height;
 
         const diff = {
           x: ui.originalPosition.left - ui.position.left,
@@ -219,7 +222,7 @@ export class Annotation extends EventDispatcher {
     });
 
     const updateCallback = () => {
-      const position = this.position;
+      // const position = this.position;
       const scene = viewer.scene;
 
       const renderAreaWidth = viewer.renderer.getSize().width;
@@ -503,6 +506,7 @@ export class Annotation extends EventDispatcher {
   }
 
   moveHere(camera) {
+    console.log(camera);
     if (!this.hasView()) {
       return;
     }

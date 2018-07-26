@@ -1,4 +1,6 @@
-
+import * as THREE from 'three';
+import $ from 'jquery';
+import * as d3 from 'd3';
 
 import { PointColorType } from '../defines.js';
 import { PointCloudMaterial } from '../materials/PointCloudMaterial.js';
@@ -87,7 +89,7 @@ class ProfilePointCloudEntry {
     }
 
     { // REBUILD MODEL
-      const pointsProcessed = 0;
+      // const pointsProcessed = 0;
       let updateRange = {
         start: this.currentBatch.geometry.drawRange.count,
         count: 0,
@@ -219,11 +221,11 @@ export class ProfileWindow extends EventDispatcher {
       this.render();
     });
 
-    this.renderArea.mousedown((e) => {
+    this.renderArea.mousedown(() => {
       this.mouseIsDown = true;
     });
 
-    this.renderArea.mouseup((e) => {
+    this.renderArea.mouseup(() => {
       this.mouseIsDown = false;
     });
 
@@ -387,6 +389,7 @@ export class ProfileWindow extends EventDispatcher {
       const points = new Points();
 
       for (const [pointcloud, entry] of this.pointclouds) {
+        console.log(pointcloud);
         for (const pointSet of entry.points) {
           points.add(pointSet);
         }
@@ -405,6 +408,7 @@ export class ProfileWindow extends EventDispatcher {
       const points = new Points();
 
       for (const [pointcloud, entry] of this.pointclouds) {
+        console.log(pointcloud);
         for (const pointSet of entry.points) {
           points.add(pointSet);
         }
@@ -434,9 +438,9 @@ export class ProfileWindow extends EventDispatcher {
       index: null,
     };
 
-    const pointBox = new THREE.Box2(
-      new THREE.Vector2(mileage - radius, elevation - radius),
-      new THREE.Vector2(mileage + radius, elevation + radius));
+    // const pointBox = new THREE.Box2(
+    //   new THREE.Vector2(mileage - radius, elevation - radius),
+    //   new THREE.Vector2(mileage + radius, elevation + radius));
 
     // let debugNode = this.scene.getObjectByName("select_debug_node");
     // if(!debugNode){
@@ -451,25 +455,25 @@ export class ProfileWindow extends EventDispatcher {
     // );
     // debugNode.add(new Box3Helper(debugPointBox, 0xff0000));
 
-    let numTested = 0;
-    let numSkipped = 0;
-    let numTestedPoints = 0;
-    let numSkippedPoints = 0;
+    // let numTested = 0;
+    // let numSkipped = 0;
+    // let numTestedPoints = 0;
+    // let numSkippedPoints = 0;
 
     for (const [pointcloud, entry] of this.pointclouds) {
       for (const points of entry.points) {
-        const collisionBox = new THREE.Box2(
-          new THREE.Vector2(points.projectedBox.min.x, points.projectedBox.min.z),
-          new THREE.Vector2(points.projectedBox.max.x, points.projectedBox.max.z),
-        );
+        // const collisionBox = new THREE.Box2(
+        //   new THREE.Vector2(points.projectedBox.min.x, points.projectedBox.min.z),
+        //   new THREE.Vector2(points.projectedBox.max.x, points.projectedBox.max.z),
+        // );
 
-        const intersects = collisionBox.intersectsBox(pointBox);
+        // const intersects = collisionBox.intersectsBox(pointBox);
 
-        if (!intersects) {
-          numSkipped++;
-          numSkippedPoints += points.numPoints;
-          continue;
-        }
+        // if (!intersects) {
+        //   numSkipped++;
+        //   numSkippedPoints += points.numPoints;
+        //   continue;
+        // }
 
         // let debugCollisionBox = new THREE.Box3(
         //	new THREE.Vector3(...collisionBox.min.toArray(), -1),
@@ -477,8 +481,8 @@ export class ProfileWindow extends EventDispatcher {
         // );
         // debugNode.add(new Box3Helper(debugCollisionBox));
 
-        numTested++;
-        numTestedPoints += points.numPoints;
+        // numTested++;
+        // numTestedPoints += points.numPoints;
 
         for (let i = 0; i < points.numPoints; i++) {
           const m = points.data.mileage[i] - mileage;
@@ -597,6 +601,7 @@ export class ProfileWindow extends EventDispatcher {
   }
 
   setProfile(profile) {
+    console.log(profile);
     this.render();
   }
 
@@ -644,6 +649,7 @@ export class ProfileWindow extends EventDispatcher {
 
     let numPoints = 0;
     for (const [key, value] of this.pointclouds.entries()) {
+      console.log(key);
       numPoints += value.points.reduce((a, i) => a + i.numPoints, 0);
     }
     $('#profile_num_points').html(Utils.addCommas(numPoints));
@@ -659,6 +665,7 @@ export class ProfileWindow extends EventDispatcher {
     this.projectedBox = new THREE.Box3();
 
     for (const [key, entry] of this.pointclouds) {
+      console.log(key);
       entry.dispose();
     }
 
@@ -900,16 +907,16 @@ export class ProfileWindowController {
             this.finishLevelThenCancel();
           }
         },
-        onFinish: (event) => {
-          if (!this.enabled) {
+        // onFinish: (event) => {
+        //   if (!this.enabled) {
 
-          }
-        },
-        onCancel: () => {
-          if (!this.enabled) {
+        //   }
+        // },
+        // onCancel: () => {
+        //   if (!this.enabled) {
 
-          }
-        },
+        //   }
+        // },
       });
 
       this.requests.push(request);

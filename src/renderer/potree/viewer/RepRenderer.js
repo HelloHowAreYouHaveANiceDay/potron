@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+import Potree from '../Potree';
 
 class RepSnapshot {
   constructor() {
@@ -87,21 +89,21 @@ class RepRenderer {
       this.rtColor.dispose();
     }
 
-    viewer.scene.cameraP.aspect = aspect;
-    viewer.scene.cameraP.updateProjectionMatrix();
+    this.viewer.scene.cameraP.aspect = aspect;
+    this.viewer.scene.cameraP.updateProjectionMatrix();
 
-    const frustumScale = viewer.moveSpeed * 2.0;
-    viewer.scene.cameraO.left = -frustumScale;
-    viewer.scene.cameraO.right = frustumScale;
-    viewer.scene.cameraO.top = frustumScale * 1 / aspect;
-    viewer.scene.cameraO.bottom = -frustumScale * 1 / aspect;
-    viewer.scene.cameraO.updateProjectionMatrix();
+    const frustumScale = this.viewer.moveSpeed * 2.0;
+    this.viewer.scene.cameraO.left = -frustumScale;
+    this.viewer.scene.cameraO.right = frustumScale;
+    this.viewer.scene.cameraO.top = frustumScale * 1 / aspect;
+    this.viewer.scene.cameraO.bottom = -frustumScale * 1 / aspect;
+    this.viewer.scene.cameraO.updateProjectionMatrix();
 
-    viewer.scene.cameraScreenSpace.top = 1 / aspect;
-    viewer.scene.cameraScreenSpace.bottom = -1 / aspect;
-    viewer.scene.cameraScreenSpace.updateProjectionMatrix();
+    this.viewer.scene.cameraScreenSpace.top = 1 / aspect;
+    this.viewer.scene.cameraScreenSpace.bottom = -1 / aspect;
+    this.viewer.scene.cameraScreenSpace.updateProjectionMatrix();
 
-    viewer.renderer.setSize(width, height);
+    this.viewer.renderer.setSize(width, height);
     this.rtColor.setSize(width, height);
   }
 
@@ -197,7 +199,7 @@ class RepRenderer {
       { // resize
         const width = viewer.scaleFactor * viewer.renderArea.clientWidth;
         const height = viewer.scaleFactor * viewer.renderArea.clientHeight;
-        const aspect = width / height;
+        // const aspect = width / height;
 
         const needsResize = (snap.target.width !== width || snap.target.height !== height);
 
@@ -321,3 +323,4 @@ class RepRenderer {
   }
 }
 
+export { RepRenderer, RepSnapshot };

@@ -1,6 +1,9 @@
 /* global onmessage:true postMessage:false Module */
 /* exported onmessage */
 // http://jsperf.com/uint8array-vs-dataview3/3
+import Potree from '../Potree';
+
+
 function CustomView(buffer) {
   this.buffer = buffer;
   this.u8 = new Uint8Array(buffer);
@@ -77,7 +80,7 @@ onmessage = function (event) {
 
   const pointAttributes = event.data.pointAttributes;
   const cv = new CustomView(buffer);
-  const version = new Potree.Version(event.data.version);
+  // const version = new Potree.Version(event.data.version);
   const nodeOffset = event.data.offset;
   const scale = event.data.scale;
 
@@ -180,10 +183,12 @@ onmessage = function (event) {
   };
 
   const transferables = [];
+  /* eslint-disable */
   for (const property in message.attributeBuffers) {
     transferables.push(message.attributeBuffers[property].buffer);
   }
   transferables.push(buffer);
+  /* eslint-enable */
 
   postMessage(message, transferables);
 };

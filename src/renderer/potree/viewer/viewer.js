@@ -1,5 +1,9 @@
+import * as THREE from 'three';
+import $ from 'jquery';
+import TWEEN from '@tweenjs/tweenjs';
+import i18n from 'i18next';
 
-
+import Potree from '../Potree';
 import { ClipTask, ClipMethod, CameraMode } from '../defines.js';
 import { Renderer } from '../PotreeRenderer.js';
 import { PotreeRenderer } from './PotreeRenderer.js';
@@ -15,6 +19,7 @@ import { BoxVolume } from '../utils/Volume.js';
 import { Features } from '../Features.js';
 import { Message } from '../utils/Message.js';
 import { Sidebar } from './sidebar.js';
+import { RepRenderer } from './RepRenderer';
 
 import { InputHandler } from '../navigation/InputHandler.js';
 import { NavigationCube } from './NavigationCube.js';
@@ -25,7 +30,7 @@ import { DeviceOrientationControls } from '../navigation/DeviceOrientationContro
 import { EventDispatcher } from '../EventDispatcher.js';
 
 
-export class Viewer extends EventDispatcher {
+export default class Viewer extends EventDispatcher {
   constructor(domElement, args = {}) {
     super();
 
@@ -158,7 +163,7 @@ export class Viewer extends EventDispatcher {
       {
         const near = 2.5;
         const far = 10.0;
-        const fov = 90;
+        // const fov = 90;
 
         this.shadowTestCam = new THREE.PerspectiveCamera(90, 1, near, far);
         this.shadowTestCam.position.set(3.50, -2.80, 8.561);
@@ -564,6 +569,8 @@ export class Viewer extends EventDispatcher {
       case 'in':
         this.lengthUnit = this.LENGTH_UNITS.INCH;
         break;
+      default:
+        break;
     }
 
     this.dispatchEvent({ type: 'length_unit_changed', viewer: this, value });
@@ -595,8 +602,8 @@ export class Viewer extends EventDispatcher {
     const endPosition = camera.position.clone();
     const startTarget = view.getPivot();
     const endTarget = bs.center;
-    const startRadius = view.radius;
-    const endRadius = endPosition.distanceTo(endTarget);
+    // const startRadius = view.radius;
+    // const endRadius = endPosition.distanceTo(endTarget);
 
     const easing = TWEEN.Easing.Quartic.Out;
 
@@ -675,6 +682,8 @@ export class Viewer extends EventDispatcher {
       case 'D':
         this.setBottomView();
         break;
+      default:
+        break;
     }
   }
 
@@ -731,7 +740,7 @@ export class Viewer extends EventDispatcher {
     this.scene.cameraMode = mode;
 
     for (const pointcloud of this.scene.pointclouds) {
-      pointcloud.material.useOrthographicCamera = mode == CameraMode.ORTHOGRAPHIC;
+      pointcloud.material.useOrthographicCamera = mode === CameraMode.ORTHOGRAPHIC;
     }
   }
 
@@ -924,7 +933,7 @@ export class Viewer extends EventDispatcher {
       const imgMapToggle = document.createElement('img');
       imgMapToggle.src = new URL(`${Potree.resourcePath}/icons/map_icon.png`).href;
       imgMapToggle.style.display = 'none';
-      imgMapToggle.onclick = (e) => { this.toggleMap(); };
+      imgMapToggle.onclick = () => { this.toggleMap(); };
       imgMapToggle.id = 'potree_map_toggle';
 
       viewer.renderArea.insertBefore(imgMapToggle, viewer.renderArea.children[0]);
@@ -939,7 +948,7 @@ export class Viewer extends EventDispatcher {
         preload: ['en', 'fr', 'de', 'jp'],
         getAsync: true,
         debug: false,
-      }, (t) => {
+      }, () => {
         // Start translation once everything is loaded
         $('body').i18n();
       });
@@ -1023,7 +1032,7 @@ export class Viewer extends EventDispatcher {
     this.scene.cameraP.updateMatrixWorld();
     this.scene.cameraO.updateMatrixWorld();
 
-    const distances = [];
+    // const distances = [];
 
     const renderAreaWidth = this.renderer.getSize().width;
     const renderAreaHeight = this.renderer.getSize().height;
@@ -1064,7 +1073,7 @@ export class Viewer extends EventDispatcher {
 
 
         // SCREEN SIZE
-        if (viewer.scene.cameraMode == CameraMode.PERSPECTIVE) {
+        if (viewer.scene.cameraMode === CameraMode.PERSPECTIVE) {
           const fov = Math.PI * viewer.scene.cameraP.fov / 180;
           const slope = Math.tan(fov / 2.0);
           const projFactor = 0.5 * renderAreaHeight / (slope * distance);
@@ -1311,7 +1320,7 @@ export class Viewer extends EventDispatcher {
         // don't change near and far in this case
       }
 
-      if (this.scene.cameraMode == CameraMode.ORTHOGRAPHIC) {
+      if (this.scene.cameraMode === CameraMode.ORTHOGRAPHIC) {
         camera.near = -camera.far;
       }
     }
@@ -1441,7 +1450,7 @@ export class Viewer extends EventDispatcher {
     { // resize
       const width = this.scaleFactor * this.renderArea.clientWidth;
       const height = this.scaleFactor * this.renderArea.clientHeight;
-      const pixelRatio = this.renderer.getPixelRatio();
+      // const pixelRatio = this.renderer.getPixelRatio();
       const aspect = width / height;
 
       this.scene.cameraP.aspect = aspect;
@@ -1570,6 +1579,7 @@ export class Viewer extends EventDispatcher {
         }
 
         for (const [name, group] of groups) {
+          console.log(name);
           group.mean = group.sum / group.n;
           group.measures.sort((a, b) => a.duration - b.duration);
 
@@ -1620,7 +1630,7 @@ export class Viewer extends EventDispatcher {
   loop(timestamp) {
     requestAnimationFrame(this.loop.bind(this));
 
-    let queryAll;
+    // let queryAll;
     if (Potree.measureTimings) {
       performance.mark('loop-start');
     }

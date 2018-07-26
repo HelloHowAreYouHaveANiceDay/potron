@@ -1,5 +1,3 @@
-
-
 export class InterleavedBufferAttribute {
   constructor(name, bytes, numElements, type, normalized) {
     this.name = name;

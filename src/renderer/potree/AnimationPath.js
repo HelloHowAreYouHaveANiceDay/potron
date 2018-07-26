@@ -1,4 +1,5 @@
-
+import TWEEN from '@tweenjs/tween.js';
+import * as THREE from 'three';
 
 export class PathAnimation {
   constructor(path, start, end, speed, callback) {
@@ -30,7 +31,7 @@ export class PathAnimation {
     const progress = { t: tStart };
     this.tween = new TWEEN.Tween(progress).to({ t: tEnd }, animationDuration);
     this.tween.easing(TWEEN.Easing.Linear.None);
-    this.tween.onUpdate((e) => {
+    this.tween.onUpdate(() => {
       this.t = progress.t;
       this.callback(progress.t);
     });

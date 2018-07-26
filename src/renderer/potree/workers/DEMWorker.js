@@ -1,6 +1,6 @@
 /* global onmessage:true postMessage:false */
 /* exported onmessage */
-onmessage = function (event) {
+onmessage = function onmessage(event) {
   const boundingBox = event.data.boundingBox;
   const position = new Float32Array(event.data.position);
   const width = 64;

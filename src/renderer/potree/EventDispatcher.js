@@ -29,7 +29,7 @@
 // THE SOFTWARE.
 
 
-export class EventDispatcher {
+export default class EventDispatcher {
   constructor() {
     this._listeners = {};
   }

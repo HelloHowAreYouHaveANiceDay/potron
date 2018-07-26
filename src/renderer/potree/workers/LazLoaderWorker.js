@@ -42,6 +42,7 @@ function parseLASHeader(arraybuffer) {
 }
 
 function handleEvent(msg) {
+  /* eslint-disable */
   switch (msg.type) {
     case 'open':
       try {
@@ -117,9 +118,10 @@ function handleEvent(msg) {
       postMessage({ type: 'close', status: 1 });
       break;
   }
+  /* eslint-enable */
 }
 
-onmessage = function (event) {
+onmessage = function onMessage(event) {
   try {
     handleEvent(event.data);
   } catch (e) {

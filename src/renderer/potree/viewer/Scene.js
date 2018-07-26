@@ -1,4 +1,4 @@
-
+import * as THREE from 'three';
 
 import { Annotation } from '../Annotation.js';
 import { CameraMode } from '../defines.js';
@@ -7,7 +7,7 @@ import { Utils } from '../utils.js';
 import { EventDispatcher } from '../EventDispatcher.js';
 
 
-export class Scene extends EventDispatcher {
+export default class Scene extends EventDispatcher {
   constructor() {
     super();
 
@@ -235,7 +235,7 @@ export class Scene extends EventDispatcher {
   }
 
   getActiveCamera() {
-    return this.cameraMode == CameraMode.PERSPECTIVE ? this.cameraP : this.cameraO;
+    return this.cameraMode === CameraMode.PERSPECTIVE ? this.cameraP : this.cameraO;
   }
 
   initialize() {

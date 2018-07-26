@@ -66,4 +66,4 @@ const Features = (function () {
 }());
 
 
-export { Features };
+export default { Features };

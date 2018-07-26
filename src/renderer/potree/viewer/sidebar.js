@@ -1,3 +1,6 @@
+import $ from 'jquery';
+import * as THREE from 'three';
+import Potree from '../Potree';
 
 import { MeasuringTool } from '../utils/MeasuringTool.js';
 import { ProfileTool } from '../utils/ProfileTool.js';
@@ -20,7 +23,7 @@ import { EarthControls } from '../navigation/EarthControls.js';
 import { FirstPersonControls } from '../navigation/FirstPersonControls.js';
 import { OrbitControls } from '../navigation/OrbitControls.js';
 
-export class Sidebar {
+export default class Sidebar {
   constructor(viewer) {
     this.viewer = viewer;
 
@@ -309,6 +312,7 @@ export class Sidebar {
     tree.jstree('check_node', otherID);
 
     tree.on('create_node.jstree', (e, data) => {
+      console.log(data);
       tree.jstree('open_all');
     });
 
@@ -326,10 +330,12 @@ export class Sidebar {
     });
 
     tree.on('deselect_node.jstree', (e, data) => {
+      console.log(data);
       propertiesPanel.set(null);
     });
 
     tree.on('delete_node.jstree', (e, data) => {
+      console.log(data);
       propertiesPanel.set(null);
     });
 
@@ -564,10 +570,12 @@ export class Sidebar {
 
   initClippingTool() {
     this.viewer.addEventListener('cliptask_changed', (event) => {
+      console.log(event);
       console.log('TODO');
     });
 
     this.viewer.addEventListener('clipmethod_changed', (event) => {
+      console.log(event);
       console.log('TODO');
     });
 
@@ -779,26 +787,31 @@ export class Sidebar {
     });
 
     this.viewer.addEventListener('point_budget_changed', (event) => {
+      console.log(event);
       $('#lblPointBudget')[0].innerHTML = Utils.addCommas(this.viewer.getPointBudget());
       $('#sldPointBudget').slider({ value: this.viewer.getPointBudget() });
     });
 
     this.viewer.addEventListener('fov_changed', (event) => {
+      console.log(event);
       $('#lblFOV')[0].innerHTML = parseInt(this.viewer.getFOV());
       $('#sldFOV').slider({ value: this.viewer.getFOV() });
     });
 
     this.viewer.addEventListener('edl_radius_changed', (event) => {
+      console.log(event);
       $('#lblEDLRadius')[0].innerHTML = this.viewer.getEDLRadius().toFixed(1);
       $('#sldEDLRadius').slider({ value: this.viewer.getEDLRadius() });
     });
 
     this.viewer.addEventListener('edl_strength_changed', (event) => {
+      console.log(event);
       $('#lblEDLStrength')[0].innerHTML = this.viewer.getEDLStrength().toFixed(1);
       $('#sldEDLStrength').slider({ value: this.viewer.getEDLStrength() });
     });
 
     this.viewer.addEventListener('background_changed', (event) => {
+      console.log(event);
       $(`input[name=background][value='${this.viewer.getBackground()}']`).prop('checked', true);
     });
 
@@ -930,9 +943,9 @@ export class Sidebar {
 
     const speedRange = new THREE.Vector2(1, 10 * 1000);
 
-    const toLinearSpeed = value => Math.pow(value, 4) * speedRange.y + speedRange.x;
+    const toLinearSpeed = value => Math.pow(value, 4) * speedRange.y + speedRange.x; // eslint-disable-line
 
-    const toExpSpeed = value => Math.pow((value - speedRange.x) / speedRange.y, 1 / 4);
+    const toExpSpeed = value => Math.pow((value - speedRange.x) / speedRange.y, 1 / 4); // eslint-disable-line
 
     sldMoveSpeed.slider({
       value: toExpSpeed(this.viewer.getMoveSpeed()),
@@ -943,6 +956,7 @@ export class Sidebar {
     });
 
     this.viewer.addEventListener('move_speed_changed', (event) => {
+      console.log(event);
       lblMoveSpeed.html(this.viewer.getMoveSpeed().toFixed(1));
       sldMoveSpeed.slider({ value: toExpSpeed(this.viewer.getMoveSpeed()) });
     });
@@ -962,6 +976,7 @@ export class Sidebar {
       });
 
       this.viewer.addEventListener('minnodesize_changed', (event) => {
+        console.log(event);
         $('#lblMinNodeSize').html(parseInt(this.viewer.getMinNodeSize()));
         $('#sldMinNodeSize').slider({ value: this.viewer.getMinNodeSize() });
       });

@@ -1,4 +1,4 @@
-
+import Potree from './Potree';
 
 class LRUItem {
   constructor(node) {
@@ -156,7 +156,7 @@ class LRU {
       this.remove(current);
 
       for (const key in current.children) {
-        if (current.children.hasOwnProperty(key)) {
+        if (current.children.hasOwnProperty(key)) { // eslint-disable-line
           const child = current.children[key];
           if (child.loaded) {
             stack.push(current.children[key]);

@@ -1,6 +1,6 @@
 
 
-export const KeyCodes = {
+const KeyCodes = {
 
   LEFT: 37,
   UP: 38,
@@ -18,3 +18,5 @@ export const KeyCodes = {
   F: 'F'.charCodeAt(0),
 
 };
+
+export default KeyCodes;

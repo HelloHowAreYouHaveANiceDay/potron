@@ -1,9 +1,9 @@
 
-
+// import Potree from '../Potree';
 import { Version } from '../Version.js';
-import { PointAttributes, PointAttribute } from '../loader/PointAttributes.js';
-import { InterleavedBuffer } from '../InterleavedBuffer.js';
-import { toInterleavedBufferAttribute } from '../utils/toInterleavedBufferAttribute.js';
+import { PointAttribute } from '../loader/PointAttributes.js';
+// import { InterleavedBuffer } from '../InterleavedBuffer.js';
+// import { toInterleavedBufferAttribute } from '../utils/toInterleavedBufferAttribute.js';
 
 
 /* global onmessage:true postMessage:false */
@@ -39,7 +39,7 @@ function CustomView(buffer) {
   };
 }
 
-Potree = {};
+// Potree = {};
 
 onmessage = function (event) {
   performance.mark('binary-decoder-start');
@@ -51,9 +51,9 @@ onmessage = function (event) {
   const version = new Version(event.data.version);
   const nodeOffset = event.data.offset;
   const scale = event.data.scale;
-  const spacing = event.data.spacing;
-  const hasChildren = event.data.hasChildren;
-  const name = event.data.name;
+  // const spacing = event.data.spacing;
+  // const hasChildren = event.data.hasChildren;
+  // const name = event.data.name;
 
   const tightBoxMin = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
   const tightBoxMax = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
@@ -68,9 +68,9 @@ onmessage = function (event) {
       const positions = new Float32Array(buff);
 
       for (let j = 0; j < numPoints; j++) {
-        let x,
-          y,
-          z;
+        let x;
+        let y;
+        let z;
 
         if (version.newerThan('1.3')) {
           x = (cv.getUint32(inOffset + j * pointAttributes.byteSize + 0, true) * scale);
@@ -341,10 +341,10 @@ onmessage = function (event) {
 
         const nearestNeighbors = kNearest(pointIndex, candidates, 10);
 
-        let sum = 0;
-        for (const neighbor of nearestNeighbors) {
-          sum += Math.sqrt(neighbor.squaredDistance);
-        }
+        // let sum = 0;
+        // for (const neighbor of nearestNeighbors) {
+        //   sum += Math.sqrt(neighbor.squaredDistance);
+        // }
 
         // let mean = sum / nearestNeighbors.length;
         const mean = Math.sqrt(Math.max(...nearestNeighbors.map(n => n.squaredDistance)));
@@ -359,8 +359,8 @@ onmessage = function (event) {
     }
 
 
-    const maxMean = Math.max(...means);
-    const minMean = Math.min(...means);
+    // const maxMean = Math.max(...means);
+    // const minMean = Math.min(...means);
 
     // let colors = new Uint8Array(attributeBuffers[PointAttribute.COLOR_PACKED.name].buffer);
     // for(let i = 0; i < numPoints; i++){
@@ -409,10 +409,12 @@ onmessage = function (event) {
   };
 
   const transferables = [];
+  /* eslint-disable */
   for (const property in message.attributeBuffers) {
     transferables.push(message.attributeBuffers[property].buffer);
   }
   transferables.push(buffer);
+  /* eslint-enable */
 
   postMessage(message, transferables);
 };

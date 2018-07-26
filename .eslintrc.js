@@ -40,6 +40,7 @@ module.exports = {
     'class-methods-use-this': 0,
     'import/no-named-as-default-member': 0,
     'no-dupe-class-members': 0,
+    'no-case-declarations': 0,
     // allow debugger during development
     'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0
   }
