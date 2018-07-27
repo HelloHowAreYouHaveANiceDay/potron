@@ -1,8 +1,10 @@
+import * as THREE from 'three';
 
-import { Shaders } from '../../build/shaders/shaders.js';
 
-export class NormalizationMaterial extends THREE.RawShaderMaterial {
-  constructor(parameters = {}) {
+import { Shaders } from './shaders';
+
+export default class NormalizationMaterial extends THREE.RawShaderMaterial {
+  constructor(parameters = {}) { // eslint-disable-line
     super();
 
     const uniforms = {

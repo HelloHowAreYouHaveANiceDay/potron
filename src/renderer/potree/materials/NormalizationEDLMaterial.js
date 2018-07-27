@@ -1,10 +1,9 @@
+import * as THREE from 'three';
 
+import { Shaders } from './shaders.js';
 
-import { Shaders } from '../../build/shaders/shaders.js';
-
-
-export class NormalizationEDLMaterial extends THREE.RawShaderMaterial {
-  constructor(parameters = {}) {
+export default class NormalizationEDLMaterial extends THREE.RawShaderMaterial {
+  constructor(parameters = {}) { // eslint-disable-line
     super();
 
     const uniforms = {

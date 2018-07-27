@@ -1,4 +1,4 @@
-
+import * as THREE from 'three';
 
 import { Version } from '../Version';
 import { XHRFactory } from '../XHRFactory';
@@ -137,10 +137,10 @@ class GreyhoundUtils {
 }
 
 
-export class GreyhoundLoader {
-  constructor() {
+export default class GreyhoundLoader {
+  // constructor() {
 
-  }
+  // }
 
   // loadInfoJSON(url, callback) {
   // }
@@ -243,7 +243,7 @@ export class GreyhoundLoader {
         // Fill in geometry fields.
         const pgg = new PointCloudGreyhoundGeometry();
         pgg.serverURL = serverURL;
-        pgg.spacing = (bounds[3] - bounds[0]) / Math.pow(2, baseDepth);
+        pgg.spacing = (bounds[3] - bounds[0]) / Math.pow(2, baseDepth); // eslint-disable-line
         pgg.baseDepth = baseDepth;
         pgg.hierarchyStepSize = HIERARCHY_STEP_SIZE;
 

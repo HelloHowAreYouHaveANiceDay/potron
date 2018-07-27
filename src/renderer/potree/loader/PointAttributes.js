@@ -40,10 +40,12 @@ const PointAttributeTypes = {
 };
 
 let i = 0;
+/* eslint-disable */
 for (const obj in PointAttributeTypes) {
   PointAttributeTypes[i] = PointAttributeTypes[obj];
   i++;
 }
+/* eslint-enable */
 
 export { PointAttributeTypes };
 
@@ -150,6 +152,7 @@ export class PointAttributes {
   }
 
   hasColors() {
+    /* eslint-disable */
     for (const name in this.attributes) {
       const pointAttribute = this.attributes[name];
       if (pointAttribute.name === PointAttributeNames.COLOR_PACKED) {

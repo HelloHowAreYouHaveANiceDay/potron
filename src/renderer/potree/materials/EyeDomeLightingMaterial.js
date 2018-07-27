@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 
-import edlvs from './shaders/edl.vs';
-import edlfs from './shaders/edl.fs';
+import Shaders from './shaders';
 
 //
 // Algorithm by Christian Boucheny
@@ -33,10 +32,8 @@ export default class EyeDomeLightingMaterial extends THREE.ShaderMaterial {
 
     this.setValues({
       uniforms,
-      // vertexShader: this.getDefines() + Shaders['edl.vs'],
-      // fragmentShader: this.getDefines() + Shaders['edl.fs'],
-      vertexShader: this.getDefines() + edlvs,
-      fragmentShader: this.getDefines() + edlfs,
+      vertexShader: this.getDefines() + Shaders['edl.vs'],
+      fragmentShader: this.getDefines() + Shaders['edl.fs'],
       lights: false,
     });
 
@@ -52,10 +49,8 @@ export default class EyeDomeLightingMaterial extends THREE.ShaderMaterial {
   }
 
   updateShaderSource() {
-    // const vs = this.getDefines() + Shaders['edl.vs'];
-    // const fs = this.getDefines() + Shaders['edl.fs'];
-    const vs = this.getDefines() + edlvs;
-    const fs = this.getDefines() + edlfs;
+    const vs = this.getDefines() + Shaders['edl.vs'];
+    const fs = this.getDefines() + Shaders['edl.fs'];
 
     this.setValues({
       vertexShader: vs,

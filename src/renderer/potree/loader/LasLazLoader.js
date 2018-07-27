@@ -1,5 +1,7 @@
+import * as THREE from 'three';
+import Potree from '../Potree';
 
-
+import { LASFile, LASDecoder } from '../lib/lazlaz';
 import { Version } from '../Version.js';
 import { XHRFactory } from '../XHRFactory.js';
 
@@ -58,7 +60,7 @@ export class LasLazLoader {
 
   parse(node, buffer) {
     const lf = new LASFile(buffer);
-    const handler = new LasLazBatcher(node);
+    const handler = new LasLazBatcher(node); // eslint-disable-line
 
 
     //
@@ -95,10 +97,10 @@ export class LasLazLoader {
 
 
     lf.open()
-      .then((msg) => {
+      .then((msg) => { // eslint-disable-line
         lf.isOpen = true;
         return lf;
-      }).catch((msg) => {
+      }).catch((msg) => { // eslint-disable-line
         console.log('failed to open file. :(');
       }).then(lf => lf.getHeader().then(h => [lf, h]))
       .then((v) => {
@@ -159,9 +161,9 @@ export class LasLazLoader {
       });
   }
 
-  handle(node, url) {
+  // handle(node, url) {
 
-  }
+  // }
 }
 
 export class LasLazBatcher {
@@ -172,7 +174,7 @@ export class LasLazBatcher {
   push(lasBuffer) {
     const workerPath = `${Potree.scriptPath}/workers/LASDecoderWorker.js`;
     const worker = Potree.workerPool.getWorker(workerPath);
-    const node = this.node;
+    // const node = this.node;
 
     worker.onmessage = (e) => {
       const geometry = new THREE.BufferGeometry();

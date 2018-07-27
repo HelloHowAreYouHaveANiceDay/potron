@@ -1,4 +1,4 @@
-
+import * as THREE from 'three';
 
 import { PointCloudOctreeGeometry, PointCloudOctreeGeometryNode } from '../PointCloudOctreeGeometry.js';
 import { Version } from '../Version.js';
@@ -8,7 +8,7 @@ import { BinaryLoader } from './BinaryLoader.js';
 import { Utils } from '../utils.js';
 import { PointAttribute, PointAttributes } from './PointAttributes.js';
 
-export class POCLoader {
+export default class POCLoader {
   static load(url, callback) {
     try {
       const pco = new PointCloudOctreeGeometry();
@@ -101,7 +101,7 @@ export class POCLoader {
               const node = new PointCloudOctreeGeometryNode(name, pco, boundingBox);
               node.level = level;
               node.numPoints = numPoints;
-              node.spacing = pco.spacing / Math.pow(2, level);
+              node.spacing = pco.spacing / Math.pow(2, level); // eslint-disable-line
               parentNode.addChild(node);
               nodes[name] = node;
             }

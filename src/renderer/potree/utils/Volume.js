@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 
 import { TextSprite } from '../TextSprite.js';
 
@@ -41,8 +42,8 @@ export class Volume extends THREE.Object3D {
     };
 
     { // event listeners
-      this.addEventListener('select', (e) => {});
-      this.addEventListener('deselect', (e) => {});
+      this.addEventListener('select', (e) => {}); // eslint-disable-line
+      this.addEventListener('deselect', (e) => {}); // eslint-disable-line
     }
   }
 
@@ -66,9 +67,9 @@ export class Volume extends THREE.Object3D {
 
   }
 
-  raycast(raycaster, intersects) {
+  // raycast(raycaster, intersects) {
 
-  }
+  // }
 
   get clip() {
     return this._clip;
@@ -220,7 +221,7 @@ export class SphereVolume extends Volume {
       const steps = 64;
       const uSegments = 8;
       const vSegments = 5;
-      const r = 1;
+      // const r = 1;
 
       for (let uSegment = 0; uSegment < uSegments; uSegment++) {
         const alpha = (uSegment / uSegments) * Math.PI * 2;

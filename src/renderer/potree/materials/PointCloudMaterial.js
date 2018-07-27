@@ -1,8 +1,8 @@
-
+import * as THREE from 'three';
 
 import { Utils } from '../utils.js';
 import { Gradients } from './Gradients.js';
-import { Shaders } from '../../build/shaders/shaders.js';
+import { Shaders } from './shaders.js';
 import { ClassificationScheme } from './ClassificationScheme.js';
 import { PointSizeType, PointColorType, PointShape, TreeType } from '../defines.js';
 
@@ -15,7 +15,7 @@ import { PointSizeType, PointColorType, PointShape, TreeType } from '../defines.
 //
 
 
-export class PointCloudMaterial extends THREE.RawShaderMaterial {
+export default class PointCloudMaterial extends THREE.RawShaderMaterial {
   constructor(parameters = {}) {
     super();
 
@@ -253,7 +253,7 @@ export class PointCloudMaterial extends THREE.RawShaderMaterial {
       defines.push('#define weighted_splats');
     }
 
-    for (const [key, value] of this.defines) {
+    for (const [key, value] of this.defines) { // eslint-disable-line
       defines.push(value);
     }
 
@@ -318,7 +318,7 @@ export class PointCloudMaterial extends THREE.RawShaderMaterial {
   //	}
   // }
 
-  setClipPolygons(clipPolygons, maxPolygonVertices) {
+  setClipPolygons(clipPolygons, maxPolygonVertices) { // eslint-disable-line
     if (!clipPolygons) {
       return;
     }

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import TWEEN from 'tweenjs';
 import shapefile from 'shapefile';
+import TWEEN from './lib/tween';
 
 import { XHRFactory } from './XHRFactory.js';
 import { Volume } from './utils/Volume.js';

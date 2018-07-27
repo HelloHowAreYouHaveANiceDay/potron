@@ -1,5 +1,6 @@
+import * as THREE from 'three';
 
-export const ClassificationScheme = {
+const ClassificationScheme = {
 
   DEFAULT: {
     // never classified
@@ -53,3 +54,4 @@ Object.defineProperty(ClassificationScheme, 'RANDOM', {
     return scheme;
   },
 });
+export default ClassificationScheme;

@@ -1,9 +1,11 @@
+import * as THREE from 'three';
+import Potree from '../Potree';
 import { Version } from '../Version';
 import { XHRFactory } from '../XHRFactory';
 import { PointAttributeNames } from './PointAttributes';
 
 
-export class GreyhoundBinaryLoader {
+export default class GreyhoundBinaryLoader {
   constructor(version, boundingBox, scale) {
     if (typeof (version) === 'string') {
       this.version = new Version(version);
@@ -71,6 +73,7 @@ export class GreyhoundBinaryLoader {
 
       const geometry = new THREE.BufferGeometry();
 
+      /* eslint-disable */
       for (const property in buffers) {
         const buffer = buffers[property].buffer;
 
@@ -97,7 +100,7 @@ export class GreyhoundBinaryLoader {
           geometry.addAttribute('spacing', bufferAttribute);
         }
       }
-
+      /* eslint-enable */
       tightBoundingBox.max.sub(tightBoundingBox.min);
       tightBoundingBox.min.set(0, 0, 0);
 

@@ -1,7 +1,8 @@
+import * as THREE from 'three';
 
 import { Utils } from '../utils.js';
 
-export class Profile extends THREE.Object3D {
+export default class Profile extends THREE.Object3D {
   constructor() {
     super();
 
