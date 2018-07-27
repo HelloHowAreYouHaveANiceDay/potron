@@ -2,12 +2,17 @@ import * as THREE from 'three';
 import jQuery from 'jquery';
 import proj4 from 'proj4';
 import BinaryHeap from './BinaryHeap';
+// import BinaryDecoderWorker from './workers/BinaryDecoderWorker';
+// import DEMWorker from './workers/DEMWorker';
+// // import GreyhoundBinaryDecoderWorker from './workers/GreyhoundBinaryDecoderWorker';
+// import LASDecoderWorker from './workers/LASDecoderWorker';
+// import LazLoaderWorker from './workers/LazLoaderWorker';
 
 const TWEEN = require('@tweenjs/tween.js');
 
 const $ = jQuery;
 
-const Potree = {};
+let Potree = {};
 
 (
 	function (global, factory) {
@@ -10162,7 +10167,7 @@ void main() {
 		}
 	}
 
-	//Potree.workerPool = new Potree.WorkerPool();
+	// Potree.workerPool = new Potree.WorkerPool();
 
 	//
 	// Algorithm by Christian Boucheny
@@ -10817,6 +10822,7 @@ void main() {
 			}
 
 			let workerPath = Potree.scriptPath + '/workers/BinaryDecoderWorker.js';
+			// let workerPath = './Wor'
 			let worker = Potree.workerPool.getWorker(workerPath);
 
 			worker.onmessage = function (e) {
@@ -22730,17 +22736,20 @@ ENDSEC
 
 			let viewer = this;
 			let sidebarContainer = $('#potree_sidebar_container');
-			sidebarContainer.load(new URL(Potree.scriptPath + '/sidebar.html').href, () => {
+			// sidebarContainer.load(new URL(Potree.scriptPath + '/sidebar.html').href, () => {
+		 sidebarContainer.load((Potree.scriptPath + '/sidebar.html'), () => {
 				sidebarContainer.css('width', '300px');
 				sidebarContainer.css('height', '100%');
 
 				let imgMenuToggle = document.createElement('img');
-				imgMenuToggle.src = new URL(Potree.resourcePath + '/icons/menu_button.svg').href;
+				// imgMenuToggle.src = new URL(Potree.resourcePath + '/icons/menu_button.svg').href;
+				imgMenuToggle.src = Potree.resourcePath + '/icons/menu_button.svg';
 				imgMenuToggle.onclick = this.toggleSidebar;
 				imgMenuToggle.classList.add('potree_menu_toggle');
 
 				let imgMapToggle = document.createElement('img');
-				imgMapToggle.src = new URL(Potree.resourcePath + '/icons/map_icon.png').href;
+				// imgMapToggle.src = new URL(Potree.resourcePath + '/icons/map_icon.png').href;
+				imgMapToggle.src = Potree.resourcePath + '/icons/map_icon.png';
 				imgMapToggle.style.display = 'none';
 				imgMapToggle.onclick = e => { this.toggleMap(); };
 				imgMapToggle.id = 'potree_map_toggle';
@@ -23615,18 +23624,18 @@ ENDSEC
 
 	const debug = {};
 
-	exports.scriptPath = "";
-	if (document.currentScript.src) {
-		exports.scriptPath = new URL(document.currentScript.src + '/..').href;
-		if (exports.scriptPath.slice(-1) === '/') {
-			exports.scriptPath = exports.scriptPath.slice(0, -1);
-		}
-	} else {
-		console.error('Potree was unable to find its script path using document.currentScript. Is Potree included with a script tag? Does your browser support this function?');
-	}
+	exports.scriptPath = '/static';
+	// if (document.currentScript.src) {
+	// 	exports.scriptPath = new URL(document.currentScript.src + '/..').href;
+	// 	if (exports.scriptPath.slice(-1) === '/') {
+	// 		exports.scriptPath = exports.scriptPath.slice(0, -1);
+	// 	}
+	// } else {
+	// 	console.error('Potree was unable to find its script path using document.currentScript. Is Potree included with a script tag? Does your browser support this function?');
+	// }
 
-	// let resourcePath = exports.scriptPath + '/resources';
-	let resourcePath = '/static/resources';
+	let resourcePath = exports.scriptPath + '/resources';
+	// let resourcePath = '/static/resources';
 
 
 	function loadPointCloud(path, name, callback){
