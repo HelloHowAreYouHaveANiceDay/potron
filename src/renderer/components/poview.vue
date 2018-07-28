@@ -586,10 +586,6 @@ body{
 	filter:				drop-shadow(0px 0px 4px white);
 }
 
-.ui-widget-content{
-	/*color: var(--font-color) !important;*/
-}
-
 .accordion > h3{
 	background-color: var(--bg-color-2) !important;
 	background: #f6f6f6 50% 50% repeat-x;

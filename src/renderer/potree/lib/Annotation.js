@@ -571,7 +571,7 @@ class Annotation extends EventDispatcher {
 
         const tween = new TWEEN.Tween(t)
           .to({ x: 1 }, animationDuration)
-          .onUpdate(function () {
+          .onUpdate(() => {
             view.radius = this.x * endRadius + (1 - this.x) * startRadius;
           });
         tween.easing(easing);
