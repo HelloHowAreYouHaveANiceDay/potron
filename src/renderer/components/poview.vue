@@ -26,11 +26,7 @@ export default {
   },
   methods: {
     initViewer() {
-      {
-			// open links in the standard browser instead of electron
-			// see https://github.com/electron/electron/issues/1344
-	
-		}
+
   //  {
 	// 		// open links in the standard browser instead of electron
 	// 		// see https://github.com/electron/electron/issues/1344
