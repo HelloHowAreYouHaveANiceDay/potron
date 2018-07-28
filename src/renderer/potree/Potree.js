@@ -43,6 +43,27 @@ import PointCloudMaterial from './lib/PointCloudMaterial';
 import PointCloudOctreeNode from './lib/PointCloudOctreeNode';
 import PointCloudOctree from './lib/PointCloudOctree';
 import Points from './lib/Points';
+import Box3Helper from './lib/Box3Helper';
+import PointCloudArena4DNode from './lib/PointCloudArena4DNode';
+import Shader from './lib/Shader';
+import attributeLocations from './lib/AttributeLocations';
+import WebGLTexture from './lib/WebGLTexture';
+import paramThreeToGL from './lib/paramThreeToGL';
+import WebGLBuffer from './lib/WebGLBuffer';
+
+// import Renderer from './lib/Renderer';
+import ProfileData from './lib/ProfileData';
+import ProfileRequest from './lib/ProfileRequest';
+import Version from './lib/Version';
+import WorkerPool from './lib/WorkerPool';
+import EyeDomeLightingMaterial from './lib/EyeDomeLightingMaterial';
+import NormalizationEDLMaterial from './lib/NormalizationEDLMaterial';
+import NormalizationMaterial from './lib/NormalizationMaterial';
+import LasLazLoader from './lib/LasLazLoader';
+import PointAttributeNames from './lib/PointAttributeNames';
+import PointAttributeTypes from './lib/PointAttributeTypes';
+import PointAttribute from './lib/PointAttribute';
+import PointAttributes from './lib/PointAttributes';
 // import BinaryDecoderWorker from './workers/BinaryDecoderWorker';
 // import DEMWorker from './workers/DEMWorker';
 // // import GreyhoundBinaryDecoderWorker from './workers/GreyhoundBinaryDecoderWorker';
@@ -283,41 +304,7 @@ const Potree = {};
 
 
 
-      /**
-       *
-       * code adapted from three.js BoxHelper.js
-       * https://github.com/mrdoob/three.js/blob/dev/src/helpers/BoxHelper.js
-       *
-       * @author mrdoob / http://mrdoob.com/
-       * @author Mugen87 / http://github.com/Mugen87
-       * @author mschuetz / http://potree.org
-       */
 
-      class Box3Helper extends THREE.LineSegments {
-        constructor(box, color) {
-          if (color === undefined) color = 0xffff00;
-
-          let indices = new Uint16Array([0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7]);
-          let positions = new Float32Array([
-            box.min.x, box.min.y, box.min.z,
-            box.max.x, box.min.y, box.min.z,
-            box.max.x, box.min.y, box.max.z,
-            box.min.x, box.min.y, box.max.z,
-            box.min.x, box.max.y, box.min.z,
-            box.max.x, box.max.y, box.min.z,
-            box.max.x, box.max.y, box.max.z,
-            box.min.x, box.max.y, box.max.z
-          ]);
-
-          let geometry = new THREE.BufferGeometry();
-          geometry.setIndex(new THREE.BufferAttribute(indices, 1));
-          geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-          let material = new THREE.LineBasicMaterial({ color: color });
-
-          super(geometry, material);
-        }
-      }
 
       function updatePointClouds(pointclouds, camera, renderer) {
 
@@ -730,2181 +717,668 @@ const Potree = {};
         };
       }
 
-      class PointCloudArena4DNode extends PointCloudTreeNode {
-        constructor() {
-          super();
 
-          this.left = null;
-          this.right = null;
-          this.sceneNode = null;
-          this.kdtree = null;
-        }
 
-        getNumPoints() {
-          return this.geometryNode.numPoints;
-        }
 
-        isLoaded() {
-          return true;
-        }
 
-        isTreeNode() {
-          return true;
-        }
+class Renderer {
+  constructor(threeRenderer) {
+    this.threeRenderer = threeRenderer;
+    this.gl = this.threeRenderer.context;
 
-        isGeometryNode() {
-          return false;
-        }
+    this.buffers = new Map();
+    this.shaders = new Map();
+    this.textures = new Map();
 
-        getLevel() {
-          return this.geometryNode.level;
-        }
+    this.glTypeMapping = new Map();
+    this.glTypeMapping.set(Float32Array, this.gl.FLOAT);
+    this.glTypeMapping.set(Uint8Array, this.gl.UNSIGNED_BYTE);
+    this.glTypeMapping.set(Uint16Array, this.gl.UNSIGNED_SHORT);
 
-        getBoundingSphere() {
-          return this.geometryNode.boundingSphere;
-        }
+    this.toggle = 0;
+  }
 
-        getBoundingBox() {
-          return this.geometryNode.boundingBox;
-        }
+  createBuffer(geometry) {
+    const gl = this.gl;
+    const webglBuffer = new WebGLBuffer();
+    webglBuffer.vao = gl.createVertexArray();
+    webglBuffer.numElements = geometry.attributes.position.count;
 
-        toTreeNode(child) {
-          let geometryNode = null;
+    gl.bindVertexArray(webglBuffer.vao);
 
-          if (this.left === child) {
-            geometryNode = this.left;
-          } else if (this.right === child) {
-            geometryNode = this.right;
-          }
+    for (const attributeName in geometry.attributes) {
+      const bufferAttribute = geometry.attributes[attributeName];
 
-          if (!geometryNode.loaded) {
-            return;
-          }
+      const vbo = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      gl.bufferData(gl.ARRAY_BUFFER, bufferAttribute.array, gl.STATIC_DRAW);
 
-          let node = new PointCloudArena4DNode();
-          let sceneNode = THREE.PointCloud(geometryNode.geometry, this.kdtree.material);
-          sceneNode.visible = false;
+      const attributeLocation = attributeLocations[attributeName];
+      const normalized = bufferAttribute.normalized;
+      const type = this.glTypeMapping.get(bufferAttribute.array.constructor);
 
-          node.kdtree = this.kdtree;
-          node.geometryNode = geometryNode;
-          node.sceneNode = sceneNode;
-          node.parent = this;
-          node.left = this.geometryNode.left;
-          node.right = this.geometryNode.right;
-        }
+      gl.vertexAttribPointer(attributeLocation, bufferAttribute.itemSize, type, normalized, 0, 0);
+      gl.enableVertexAttribArray(attributeLocation);
 
-        getChildren() {
-          let children = [];
+      webglBuffer.vbos.set(attributeName, {
+        handle: vbo,
+        name: attributeName,
+        count: bufferAttribute.count,
+        itemSize: bufferAttribute.itemSize,
+        type: geometry.attributes.position.array.constructor,
+        version: 0,
+      });
+    }
 
-          if (this.left) {
-            children.push(this.left);
-          }
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.bindVertexArray(null);
 
-          if (this.right) {
-            children.push(this.right);
-          }
+    return webglBuffer;
+  }
 
-          return children;
+  updateBuffer(geometry) {
+    const gl = this.gl;
+
+    const webglBuffer = this.buffers.get(geometry);
+
+    gl.bindVertexArray(webglBuffer.vao);
+
+    for (const attributeName in geometry.attributes) {
+      const bufferAttribute = geometry.attributes[attributeName];
+
+      const attributeLocation = attributeLocations[attributeName];
+      const normalized = bufferAttribute.normalized;
+      const type = this.glTypeMapping.get(bufferAttribute.array.constructor);
+
+      let vbo = null;
+      if (!webglBuffer.vbos.has(attributeName)) {
+        vbo = gl.createBuffer();
+
+        webglBuffer.vbos.set(attributeName, {
+          handle: vbo,
+          name: attributeName,
+          count: bufferAttribute.count,
+          itemSize: bufferAttribute.itemSize,
+          type: geometry.attributes.position.array.constructor,
+          version: bufferAttribute.version,
+        });
+      } else {
+        vbo = webglBuffer.vbos.get(attributeName).handle;
+        webglBuffer.vbos.get(attributeName).version = bufferAttribute.version;
+      }
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      gl.bufferData(gl.ARRAY_BUFFER, bufferAttribute.array, gl.STATIC_DRAW);
+      gl.vertexAttribPointer(attributeLocation, bufferAttribute.itemSize, type, normalized, 0, 0);
+      gl.enableVertexAttribArray(attributeLocation);
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.bindVertexArray(null);
+  }
+
+  traverse(scene) {
+    const octrees = [];
+
+    const stack = [scene];
+    while (stack.length > 0) {
+      const node = stack.pop();
+
+      if (node instanceof PointCloudTree) {
+        octrees.push(node);
+        continue;
+      }
+
+      const visibleChildren = node.children.filter(c => c.visible);
+      stack.push(...visibleChildren);
+    }
+
+    const result = {
+      octrees,
+    };
+
+    return result;
+  }
+
+
+  renderNodes(octree, nodes, visibilityTextureData, camera, target, shader, params) {
+    if (exports.measureTimings) performance.mark('renderNodes-start');
+
+    const gl = this.gl;
+
+    const material = params.material ? params.material : octree.material;
+    const shadowMaps = params.shadowMaps == null ? [] : params.shadowMaps;
+    const view = camera.matrixWorldInverse;
+    const worldView = new THREE.Matrix4();
+
+    const mat4holder = new Float32Array(16);
+
+    let i = 0;
+    for (const node of nodes) {
+      if (exports.debug.allowedNodes !== undefined) {
+        if (!exports.debug.allowedNodes.includes(node.name)) {
+          continue;
         }
       }
 
-      class PointCloudArena4D$1 extends PointCloudTree {
-        constructor(geometry) {
-          super();
+      // if(![
+      //	"r42006420226",
+      //	]
+      //	.includes(node.name)){
+      //	continue;
+      // }
 
-          this.root = null;
-          if (geometry.root) {
-            this.root = geometry.root;
-          } else {
-            geometry.addEventListener('hierarchy_loaded', () => {
-              this.root = geometry.root;
-            });
+      const world = node.sceneNode.matrixWorld;
+      worldView.multiplyMatrices(view, world);
+      // this.multiplyViewWithScaleTrans(view, world, worldView);
+
+      if (visibilityTextureData) {
+        const vnStart = visibilityTextureData.offsets.get(node);
+        shader.setUniform1f('uVNStart', vnStart);
+      }
+
+
+      const level = node.getLevel();
+
+      if (node.debug) {
+        shader.setUniform('uDebug', true);
+      } else {
+        shader.setUniform('uDebug', false);
+      }
+
+      let isLeaf;
+      if (node instanceof PointCloudOctreeNode) {
+        isLeaf = Object.keys(node.children).length === 0;
+      } else if (node instanceof PointCloudArena4DNode) {
+        isLeaf = node.geometryNode.isLeaf;
+      }
+      shader.setUniform('uIsLeafNode', isLeaf);
+
+
+      // TODO consider passing matrices in an array to avoid uniformMatrix4fv overhead
+      const lModel = shader.uniformLocations.modelMatrix;
+      if (lModel) {
+        mat4holder.set(world.elements);
+        gl.uniformMatrix4fv(lModel, false, mat4holder);
+      }
+
+      const lModelView = shader.uniformLocations.modelViewMatrix;
+      // mat4holder.set(worldView.elements);
+      // faster then set in chrome 63
+      for (let j = 0; j < 16; j++) {
+        mat4holder[j] = worldView.elements[j];
+      }
+      gl.uniformMatrix4fv(lModelView, false, mat4holder);
+
+      { // Clip Polygons
+        if (material.clipPolygons && material.clipPolygons.length > 0) {
+          const clipPolygonVCount = [];
+          const worldViewProjMatrices = [];
+
+          for (const clipPolygon of material.clipPolygons) {
+            const view = clipPolygon.viewMatrix;
+            const proj = clipPolygon.projMatrix;
+
+            const worldViewProj = proj.clone().multiply(view).multiply(world);
+
+            clipPolygonVCount.push(clipPolygon.markers.length);
+            worldViewProjMatrices.push(worldViewProj);
           }
 
-          this.visiblePointsTarget = 2 * 1000 * 1000;
-          this.minimumNodePixelSize = 150;
+          const flattenedMatrices = [].concat(...worldViewProjMatrices.map(m => m.elements));
 
-          this.position.sub(geometry.offset);
-          this.updateMatrix();
+          const flattenedVertices = new Array(8 * 3 * material.clipPolygons.length);
+          for (let i = 0; i < material.clipPolygons.length; i++) {
+            const clipPolygon = material.clipPolygons[i];
+            for (let j = 0; j < clipPolygon.markers.length; j++) {
+              flattenedVertices[i * 24 + (j * 3 + 0)] = clipPolygon.markers[j].position.x;
+              flattenedVertices[i * 24 + (j * 3 + 1)] = clipPolygon.markers[j].position.y;
+              flattenedVertices[i * 24 + (j * 3 + 2)] = clipPolygon.markers[j].position.z;
+            }
+          }
 
-          this.numVisibleNodes = 0;
-          this.numVisiblePoints = 0;
+          const lClipPolygonVCount = shader.uniformLocations['uClipPolygonVCount[0]'];
+          gl.uniform1iv(lClipPolygonVCount, clipPolygonVCount);
 
-          this.boundingBoxNodes = [];
-          this.loadQueue = [];
-          this.visibleNodes = [];
+          const lClipPolygonVP = shader.uniformLocations['uClipPolygonWVP[0]'];
+          gl.uniformMatrix4fv(lClipPolygonVP, false, flattenedMatrices);
 
-          this.pcoGeometry = geometry;
-          this.boundingBox = this.pcoGeometry.boundingBox;
-          this.boundingSphere = this.pcoGeometry.boundingSphere;
-          this.material = new PointCloudMaterial({ vertexColors: THREE.VertexColors, size: 0.05, treeType: TreeType.KDTREE });
-          this.material.sizeType = PointSizeType.ATTENUATED;
-          this.material.size = 0.05;
-          this.profileRequests = [];
-          this.name = '';
+          const lClipPolygons = shader.uniformLocations['uClipPolygonVertices[0]'];
+          gl.uniform3fv(lClipPolygons, flattenedVertices);
+        }
+      }
+
+
+      // shader.setUniformMatrix4("modelMatrix", world);
+      // shader.setUniformMatrix4("modelViewMatrix", worldView);
+      shader.setUniform1f('uLevel', level);
+      shader.setUniform1f('uNodeSpacing', node.geometryNode.estimatedSpacing);
+
+      shader.setUniform1f('uPCIndex', i);
+      // uBBSize
+
+      if (shadowMaps.length > 0) {
+        const lShadowMap = shader.uniformLocations['uShadowMap[0]'];
+
+        shader.setUniform3f('uShadowColor', material.uniforms.uShadowColor.value);
+
+        const bindingStart = 5;
+        const bindingPoints = new Array(shadowMaps.length).fill(bindingStart).map((a, i) => (a + i));
+        gl.uniform1iv(lShadowMap, bindingPoints);
+
+        for (let i = 0; i < shadowMaps.length; i++) {
+          const shadowMap = shadowMaps[i];
+          const bindingPoint = bindingPoints[i];
+          const glTexture = this.threeRenderer.properties.get(shadowMap.target.texture).__webglTexture;
+
+          gl.activeTexture(gl[`TEXTURE${bindingPoint}`]);
+          gl.bindTexture(gl.TEXTURE_2D, glTexture);
         }
 
-        getBoundingBoxWorld() {
-          this.updateMatrixWorld(true);
-          let box = this.boundingBox;
-          let transform = this.matrixWorld;
-          let tBox = Utils.computeTransformedBoundingBox(box, transform);
+        {
+          const worldViewMatrices = shadowMaps
+            .map(sm => sm.camera.matrixWorldInverse)
+            .map(view => new THREE.Matrix4().multiplyMatrices(view, world));
 
-          return tBox;
-        };
-
-        setName(name) {
-          if (this.name !== name) {
-            this.name = name;
-            this.dispatchEvent({ type: 'name_changed', name: name, pointcloud: this });
-          }
+          const flattenedMatrices = [].concat(...worldViewMatrices.map(c => c.elements));
+          const lWorldView = shader.uniformLocations['uShadowWorldView[0]'];
+          gl.uniformMatrix4fv(lWorldView, false, flattenedMatrices);
         }
 
-        getName() {
-          return this.name;
+        {
+          const flattenedMatrices = [].concat(...shadowMaps.map(sm => sm.camera.projectionMatrix.elements));
+          const lProj = shader.uniformLocations['uShadowProj[0]'];
+          gl.uniformMatrix4fv(lProj, false, flattenedMatrices);
         }
-
-        getLevel() {
-          return this.level;
-        }
-
-        toTreeNode(geometryNode, parent) {
-          let node = new PointCloudArena4DNode();
-          let sceneNode = new THREE.Points(geometryNode.geometry, this.material);
-
-          sceneNode.frustumCulled = false;
-          sceneNode.onBeforeRender = (_this, scene, camera, geometry, material, group) => {
-            if (material.program) {
-              _this.getContext().useProgram(material.program.program);
-
-              if (material.program.getUniforms().map.level) {
-                let level = geometryNode.getLevel();
-                material.uniforms.level.value = level;
-                material.program.getUniforms().map.level.setValue(_this.getContext(), level);
-              }
-
-              if (this.visibleNodeTextureOffsets && material.program.getUniforms().map.vnStart) {
-                let vnStart = this.visibleNodeTextureOffsets.get(node);
-                material.uniforms.vnStart.value = vnStart;
-                material.program.getUniforms().map.vnStart.setValue(_this.getContext(), vnStart);
-              }
-
-              if (material.program.getUniforms().map.pcIndex) {
-                let i = node.pcIndex ? node.pcIndex : this.visibleNodes.indexOf(node);
-                material.uniforms.pcIndex.value = i;
-                material.program.getUniforms().map.pcIndex.setValue(_this.getContext(), i);
-              }
-            }
-          };
-
-          node.geometryNode = geometryNode;
-          node.sceneNode = sceneNode;
-          node.pointcloud = this;
-          node.left = geometryNode.left;
-          node.right = geometryNode.right;
-
-          if (!parent) {
-            this.root = node;
-            this.add(sceneNode);
-          } else {
-            parent.sceneNode.add(sceneNode);
-
-            if (parent.left === geometryNode) {
-              parent.left = node;
-            } else if (parent.right === geometryNode) {
-              parent.right = node;
-            }
-          }
-
-          let disposeListener = function () {
-            parent.sceneNode.remove(node.sceneNode);
-
-            if (parent.left === node) {
-              parent.left = geometryNode;
-            } else if (parent.right === node) {
-              parent.right = geometryNode;
-            }
-          };
-          geometryNode.oneTimeDisposeHandlers.push(disposeListener);
-
-          return node;
-        }
-
-        updateMaterial(material, visibleNodes, camera, renderer) {
-          material.fov = camera.fov * (Math.PI / 180);
-          material.screenWidth = renderer.domElement.clientWidth;
-          material.screenHeight = renderer.domElement.clientHeight;
-          material.spacing = this.pcoGeometry.spacing;
-          material.near = camera.near;
-          material.far = camera.far;
-
-          // reduce shader source updates by setting maxLevel slightly higher than actually necessary
-          if (this.maxLevel > material.levels) {
-            material.levels = this.maxLevel + 2;
-          }
-
-          // material.uniforms.octreeSize.value = this.boundingBox.size().x;
-          let bbSize = this.boundingBox.getSize(new THREE.Vector3());
-          material.bbSize = [bbSize.x, bbSize.y, bbSize.z];
-        }
-
-        updateVisibleBounds() {
-
-        }
-
-        hideDescendants(object) {
-          let stack = [];
-          for (let i = 0; i < object.children.length; i++) {
-            let child = object.children[i];
-            if (child.visible) {
-              stack.push(child);
-            }
-          }
-
-          while (stack.length > 0) {
-            let child = stack.shift();
-
-            child.visible = false;
-            if (child.boundingBoxNode) {
-              child.boundingBoxNode.visible = false;
-            }
-
-            for (let i = 0; i < child.children.length; i++) {
-              let childOfChild = child.children[i];
-              if (childOfChild.visible) {
-                stack.push(childOfChild);
-              }
-            }
-          }
-        }
-
-        updateMatrixWorld(force) {
-          // node.matrixWorld.multiplyMatrices( node.parent.matrixWorld, node.matrix );
-
-          if (this.matrixAutoUpdate === true) this.updateMatrix();
-
-          if (this.matrixWorldNeedsUpdate === true || force === true) {
-            if (this.parent === undefined) {
-              this.matrixWorld.copy(this.matrix);
-            } else {
-              this.matrixWorld.multiplyMatrices(this.parent.matrixWorld, this.matrix);
-            }
-
-            this.matrixWorldNeedsUpdate = false;
-
-            force = true;
-          }
-        }
-
-        nodesOnRay(nodes, ray) {
-          let nodesOnRay = [];
-
-          let _ray = ray.clone();
-          for (let i = 0; i < nodes.length; i++) {
-            let node = nodes[i];
-            let sphere = node.getBoundingSphere().clone().applyMatrix4(node.sceneNode.matrixWorld);
-            // TODO Unused: let box = node.getBoundingBox().clone().applyMatrix4(node.sceneNode.matrixWorld);
-
-            if (_ray.intersectsSphere(sphere)) {
-              nodesOnRay.push(node);
-            }
-            // if(_ray.isIntersectionBox(box)){
-            //	nodesOnRay.push(node);
-            // }
-          }
-
-          return nodesOnRay;
-        }
-
-        pick(viewer, camera, ray, params = {}) {
-
-          let renderer = viewer.renderer;
-          let pRenderer = viewer.pRenderer;
-
-          performance.mark("pick-start");
-
-          let getVal = (a, b) => a !== undefined ? a : b;
-
-          let pickWindowSize = getVal(params.pickWindowSize, 17);
-          let pickOutsideClipRegion = getVal(params.pickOutsideClipRegion, false);
-
-          let size = renderer.getSize();
-
-          let width = Math.ceil(getVal(params.width, size.width));
-          let height = Math.ceil(getVal(params.height, size.height));
-
-          let pointSizeType = getVal(params.pointSizeType, this.material.pointSizeType);
-          let pointSize = getVal(params.pointSize, this.material.size);
-
-          let nodes = this.nodesOnRay(this.visibleNodes, ray);
-
-          if (nodes.length === 0) {
-            return null;
-          }
-
-          if (!this.pickState) {
-            let scene = new THREE.Scene();
-
-            let material = new PointCloudMaterial();
-            material.pointColorType = PointColorType.POINT_INDEX;
-
-            let renderTarget = new THREE.WebGLRenderTarget(
-              1, 1,
-              {
-                minFilter: THREE.LinearFilter,
-                magFilter: THREE.NearestFilter,
-                format: THREE.RGBAFormat
-              }
-            );
-
-            this.pickState = {
-              renderTarget: renderTarget,
-              material: material,
-              scene: scene
-            };
-          }
-
-          let pickState = this.pickState;
-          let pickMaterial = pickState.material;
-
-          { // update pick material
-            pickMaterial.pointSizeType = pointSizeType;
-            pickMaterial.shape = this.material.shape;
-
-            pickMaterial.size = pointSize;
-            pickMaterial.uniforms.minSize.value = this.material.uniforms.minSize.value;
-            pickMaterial.uniforms.maxSize.value = this.material.uniforms.maxSize.value;
-            pickMaterial.classification = this.material.classification;
-            if (params.pickClipped) {
-              pickMaterial.clipBoxes = this.material.clipBoxes;
-              if (this.material.clipTask === ClipTask.HIGHLIGHT) {
-                pickMaterial.clipTask = ClipTask.NONE;
-              } else {
-                pickMaterial.clipTask = this.material.clipTask;
-              }
-            } else {
-              pickMaterial.clipBoxes = [];
-            }
-
-            this.updateMaterial(pickMaterial, nodes, camera, renderer);
-          }
-
-          pickState.renderTarget.setSize(width, height);
-
-          let pixelPos = new THREE.Vector2(params.x, params.y);
-
-          let gl = renderer.getContext();
-          gl.enable(gl.SCISSOR_TEST);
-          gl.scissor(
-            parseInt(pixelPos.x - (pickWindowSize - 1) / 2),
-            parseInt(pixelPos.y - (pickWindowSize - 1) / 2),
-            parseInt(pickWindowSize), parseInt(pickWindowSize));
-
-
-          renderer.state.buffers.depth.setTest(pickMaterial.depthTest);
-          renderer.state.buffers.depth.setMask(pickMaterial.depthWrite);
-          renderer.state.setBlending(THREE.NoBlending);
-
-          renderer.clearTarget(pickState.renderTarget, true, true, true);
-
-          { // RENDER
-            renderer.setRenderTarget(pickState.renderTarget);
-            gl.clearColor(0, 0, 0, 0);
-            renderer.clearTarget(pickState.renderTarget, true, true, true);
-
-            let tmp = this.material;
-            this.material = pickMaterial;
-
-            pRenderer.renderOctree(this, nodes, camera, pickState.renderTarget);
-
-            this.material = tmp;
-          }
-
-          let clamp = (number, min, max) => Math.min(Math.max(min, number), max);
-
-          let x = parseInt(clamp(pixelPos.x - (pickWindowSize - 1) / 2, 0, width));
-          let y = parseInt(clamp(pixelPos.y - (pickWindowSize - 1) / 2, 0, height));
-          let w = parseInt(Math.min(x + pickWindowSize, width) - x);
-          let h = parseInt(Math.min(y + pickWindowSize, height) - y);
-
-          let pixelCount = w * h;
-          let buffer = new Uint8Array(4 * pixelCount);
-
-          gl.readPixels(x, y, pickWindowSize, pickWindowSize, gl.RGBA, gl.UNSIGNED_BYTE, buffer);
-
-          renderer.setRenderTarget(null);
-          renderer.state.reset();
-          renderer.setScissorTest(false);
-          gl.disable(gl.SCISSOR_TEST);
-
-          let pixels = buffer;
-          let ibuffer = new Uint32Array(buffer.buffer);
-
-          // find closest hit inside pixelWindow boundaries
-          let min = Number.MAX_VALUE;
-          let hits = [];
-          for (let u = 0; u < pickWindowSize; u++) {
-            for (let v = 0; v < pickWindowSize; v++) {
-              let offset = (u + v * pickWindowSize);
-              let distance = Math.pow(u - (pickWindowSize - 1) / 2, 2) + Math.pow(v - (pickWindowSize - 1) / 2, 2);
-
-              let pcIndex = pixels[4 * offset + 3];
-              pixels[4 * offset + 3] = 0;
-              let pIndex = ibuffer[offset];
-
-              if (!(pcIndex === 0 && pIndex === 0) && (pcIndex !== undefined) && (pIndex !== undefined)) {
-                let hit = {
-                  pIndex: pIndex,
-                  pcIndex: pcIndex,
-                  distanceToCenter: distance
-                };
-
-                if (params.all) {
-                  hits.push(hit);
-                } else {
-                  if (hits.length > 0) {
-                    if (distance < hits[0].distanceToCenter) {
-                      hits[0] = hit;
-                    }
-                  } else {
-                    hits.push(hit);
-                  }
-                }
-
-
-              }
-            }
-          }
-
-
-
-          for (let hit of hits) {
-            let point = {};
-
-            if (!nodes[hit.pcIndex]) {
-              return null;
-            }
-
-            let node = nodes[hit.pcIndex];
-            let pc = node.sceneNode;
-            let geometry = node.geometryNode.geometry;
-
-            for (let attributeName in geometry.attributes) {
-              let attribute = geometry.attributes[attributeName];
-
-              if (attributeName === 'position') {
-                let x = attribute.array[3 * hit.pIndex + 0];
-                let y = attribute.array[3 * hit.pIndex + 1];
-                let z = attribute.array[3 * hit.pIndex + 2];
-
-                let position = new THREE.Vector3(x, y, z);
-                position.applyMatrix4(pc.matrixWorld);
-
-                point[attributeName] = position;
-              } else if (attributeName === 'indices') {
-
-              } else {
-                //if (values.itemSize === 1) {
-                //	point[attribute.name] = values.array[hit.pIndex];
-                //} else {
-                //	let value = [];
-                //	for (let j = 0; j < values.itemSize; j++) {
-                //		value.push(values.array[values.itemSize * hit.pIndex + j]);
-                //	}
-                //	point[attribute.name] = value;
-                //}
-              }
-
-            }
-
-            hit.point = point;
-          }
-
-          performance.mark("pick-end");
-          performance.measure("pick", "pick-start", "pick-end");
-
-          if (params.all) {
-            return hits.map(hit => hit.point);
-          } else {
-            if (hits.length === 0) {
-              return null;
-            } else {
-              return hits[0].point;
-            }
-          }
-        }
-
-        computeVisibilityTextureData(nodes) {
-
-          if (exports.measureTimings) performance.mark("computeVisibilityTextureData-start");
-
-          let data = new Uint8Array(nodes.length * 3);
-          let visibleNodeTextureOffsets = new Map();
-
-          // copy array
-          nodes = nodes.slice();
-
-          // sort by level and number
-          let sort = function (a, b) {
-            let la = a.geometryNode.level;
-            let lb = b.geometryNode.level;
-            let na = a.geometryNode.number;
-            let nb = b.geometryNode.number;
-            if (la !== lb) return la - lb;
-            if (na < nb) return -1;
-            if (na > nb) return 1;
-            return 0;
-          };
-          nodes.sort(sort);
-
-          let visibleNodeNames = [];
-          for (let i = 0; i < nodes.length; i++) {
-            visibleNodeNames.push(nodes[i].geometryNode.number);
-          }
-
-          for (let i = 0; i < nodes.length; i++) {
-            let node = nodes[i];
-
-            visibleNodeTextureOffsets.set(node, i);
-
-            let b1 = 0;	// children
-            let b2 = 0;	// offset to first child
-            let b3 = 0;	// split
-
-            if (node.geometryNode.left && visibleNodeNames.indexOf(node.geometryNode.left.number) > 0) {
-              b1 += 1;
-              b2 = visibleNodeNames.indexOf(node.geometryNode.left.number) - i;
-            }
-            if (node.geometryNode.right && visibleNodeNames.indexOf(node.geometryNode.right.number) > 0) {
-              b1 += 2;
-              b2 = (b2 === 0) ? visibleNodeNames.indexOf(node.geometryNode.right.number) - i : b2;
-            }
-
-            if (node.geometryNode.split === 'X') {
-              b3 = 1;
-            } else if (node.geometryNode.split === 'Y') {
-              b3 = 2;
-            } else if (node.geometryNode.split === 'Z') {
-              b3 = 4;
-            }
-
-            data[i * 3 + 0] = b1;
-            data[i * 3 + 1] = b2;
-            data[i * 3 + 2] = b3;
-          }
-
-          if (exports.measureTimings) {
-            performance.mark("computeVisibilityTextureData-end");
-            performance.measure("render.computeVisibilityTextureData", "computeVisibilityTextureData-start", "computeVisibilityTextureData-end");
-          }
-
-          return {
-            data: data,
-            offsets: visibleNodeTextureOffsets
-          };
-        }
-
-        get progress() {
-          if (this.pcoGeometry.root) {
-            return exports.numNodesLoading > 0 ? 0 : 1;
-          } else {
-            return 0;
+      }
+
+      const geometry = node.geometryNode.geometry;
+
+      let webglBuffer = null;
+      if (!this.buffers.has(geometry)) {
+        webglBuffer = this.createBuffer(geometry);
+        this.buffers.set(geometry, webglBuffer);
+      } else {
+        webglBuffer = this.buffers.get(geometry);
+        for (const attributeName in geometry.attributes) {
+          const attribute = geometry.attributes[attributeName];
+
+          if (attribute.version > webglBuffer.vbos.get(attributeName).version) {
+            this.updateBuffer(geometry);
           }
         }
       }
 
-      // Copied from three.js: WebGLRenderer.js
-      function paramThreeToGL(_gl, p) {
+      gl.bindVertexArray(webglBuffer.vao);
 
-        let extension;
+      const numPoints = webglBuffer.numElements;
+      gl.drawArrays(gl.POINTS, 0, numPoints);
 
-        if (p === THREE.RepeatWrapping) return _gl.REPEAT;
-        if (p === THREE.ClampToEdgeWrapping) return _gl.CLAMP_TO_EDGE;
-        if (p === THREE.MirroredRepeatWrapping) return _gl.MIRRORED_REPEAT;
+      i++;
+    }
 
-        if (p === THREE.NearestFilter) return _gl.NEAREST;
-        if (p === THREE.NearestMipMapNearestFilter) return _gl.NEAREST_MIPMAP_NEAREST;
-        if (p === THREE.NearestMipMapLinearFilter) return _gl.NEAREST_MIPMAP_LINEAR;
+    gl.bindVertexArray(null);
 
-        if (p === THREE.LinearFilter) return _gl.LINEAR;
-        if (p === THREE.LinearMipMapNearestFilter) return _gl.LINEAR_MIPMAP_NEAREST;
-        if (p === THREE.LinearMipMapLinearFilter) return _gl.LINEAR_MIPMAP_LINEAR;
+    if (exports.measureTimings) {
+      performance.mark('renderNodes-end');
+      performance.measure('render.renderNodes', 'renderNodes-start', 'renderNodes-end');
+    }
+  }
 
-        if (p === THREE.UnsignedByteType) return _gl.UNSIGNED_BYTE;
-        if (p === THREE.UnsignedShort4444Type) return _gl.UNSIGNED_SHORT_4_4_4_4;
-        if (p === THREE.UnsignedShort5551Type) return _gl.UNSIGNED_SHORT_5_5_5_1;
-        if (p === THREE.UnsignedShort565Type) return _gl.UNSIGNED_SHORT_5_6_5;
+  renderOctree(octree, nodes, camera, target, params = {}) {
+    const gl = this.gl;
 
-        if (p === THREE.ByteType) return _gl.BYTE;
-        if (p === THREE.ShortType) return _gl.SHORT;
-        if (p === THREE.UnsignedShortType) return _gl.UNSIGNED_SHORT;
-        if (p === THREE.IntType) return _gl.INT;
-        if (p === THREE.UnsignedIntType) return _gl.UNSIGNED_INT;
-        if (p === THREE.FloatType) return _gl.FLOAT;
+    const material = params.material ? params.material : octree.material;
+    const shadowMaps = params.shadowMaps == null ? [] : params.shadowMaps;
+    const view = camera.matrixWorldInverse;
+    const viewInv = camera.matrixWorld;
+    const proj = camera.projectionMatrix;
+    const projInv = new THREE.Matrix4().getInverse(proj);
+    // const worldView = new THREE.Matrix4();
 
-        if (p === THREE.HalfFloatType) {
+    let shader = null;
+    let visibilityTextureData = null;
 
-          extension = extensions.get('OES_texture_half_float');
+    let currentTextureBindingPoint = 0;
 
-          if (extension !== null) return extension.HALF_FLOAT_OES;
+    if (material.pointSizeType >= 0) {
+      if (material.pointSizeType === PointSizeType.ADAPTIVE ||
+        material.pointColorType === PointColorType.LOD) {
+        const vnNodes = (params.vnTextureNodes != null) ? params.vnTextureNodes : nodes;
+        visibilityTextureData = octree.computeVisibilityTextureData(vnNodes, camera);
 
-        }
+        const vnt = material.visibleNodesTexture;
+        const data = vnt.image.data;
+        data.set(visibilityTextureData.data);
+        vnt.needsUpdate = true;
+      }
+    }
 
-        if (p === THREE.AlphaFormat) return _gl.ALPHA;
-        if (p === THREE.RGBFormat) return _gl.RGB;
-        if (p === THREE.RGBAFormat) return _gl.RGBA;
-        if (p === THREE.LuminanceFormat) return _gl.LUMINANCE;
-        if (p === THREE.LuminanceAlphaFormat) return _gl.LUMINANCE_ALPHA;
-        if (p === THREE.DepthFormat) return _gl.DEPTH_COMPONENT;
-        if (p === THREE.DepthStencilFormat) return _gl.DEPTH_STENCIL;
+    { // UPDATE SHADER AND TEXTURES
+      if (!this.shaders.has(material)) {
+        const [vs, fs] = [material.vertexShader, material.fragmentShader];
+        const shader = new Shader(gl, 'pointcloud', vs, fs);
 
-        if (p === THREE.AddEquation) return _gl.FUNC_ADD;
-        if (p === THREE.SubtractEquation) return _gl.FUNC_SUBTRACT;
-        if (p === THREE.ReverseSubtractEquation) return _gl.FUNC_REVERSE_SUBTRACT;
-
-        if (p === THREE.ZeroFactor) return _gl.ZERO;
-        if (p === THREE.OneFactor) return _gl.ONE;
-        if (p === THREE.SrcColorFactor) return _gl.SRC_COLOR;
-        if (p === THREE.OneMinusSrcColorFactor) return _gl.ONE_MINUS_SRC_COLOR;
-        if (p === THREE.SrcAlphaFactor) return _gl.SRC_ALPHA;
-        if (p === THREE.OneMinusSrcAlphaFactor) return _gl.ONE_MINUS_SRC_ALPHA;
-        if (p === THREE.DstAlphaFactor) return _gl.DST_ALPHA;
-        if (p === THREE.OneMinusDstAlphaFactor) return _gl.ONE_MINUS_DST_ALPHA;
-
-        if (p === THREE.DstColorFactor) return _gl.DST_COLOR;
-        if (p === THREE.OneMinusDstColorFactor) return _gl.ONE_MINUS_DST_COLOR;
-        if (p === THREE.SrcAlphaSaturateFactor) return _gl.SRC_ALPHA_SATURATE;
-
-        if (p === THREE.RGB_S3TC_DXT1_Format || p === RGBA_S3TC_DXT1_Format ||
-          p === THREE.RGBA_S3TC_DXT3_Format || p === RGBA_S3TC_DXT5_Format) {
-
-          extension = extensions.get('WEBGL_compressed_texture_s3tc');
-
-          if (extension !== null) {
-
-            if (p === THREE.RGB_S3TC_DXT1_Format) return extension.COMPRESSED_RGB_S3TC_DXT1_EXT;
-            if (p === THREE.RGBA_S3TC_DXT1_Format) return extension.COMPRESSED_RGBA_S3TC_DXT1_EXT;
-            if (p === THREE.RGBA_S3TC_DXT3_Format) return extension.COMPRESSED_RGBA_S3TC_DXT3_EXT;
-            if (p === THREE.RGBA_S3TC_DXT5_Format) return extension.COMPRESSED_RGBA_S3TC_DXT5_EXT;
-
-          }
-
-        }
-
-        if (p === THREE.RGB_PVRTC_4BPPV1_Format || p === THREE.RGB_PVRTC_2BPPV1_Format ||
-          p === THREE.RGBA_PVRTC_4BPPV1_Format || p === THREE.RGBA_PVRTC_2BPPV1_Format) {
-
-          extension = extensions.get('WEBGL_compressed_texture_pvrtc');
-
-          if (extension !== null) {
-
-            if (p === THREE.RGB_PVRTC_4BPPV1_Format) return extension.COMPRESSED_RGB_PVRTC_4BPPV1_IMG;
-            if (p === THREE.RGB_PVRTC_2BPPV1_Format) return extension.COMPRESSED_RGB_PVRTC_2BPPV1_IMG;
-            if (p === THREE.RGBA_PVRTC_4BPPV1_Format) return extension.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
-            if (p === THREE.RGBA_PVRTC_2BPPV1_Format) return extension.COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
-
-          }
-
-        }
-
-        if (p === THREE.RGB_ETC1_Format) {
-
-          extension = extensions.get('WEBGL_compressed_texture_etc1');
-
-          if (extension !== null) return extension.COMPRESSED_RGB_ETC1_WEBGL;
-
-        }
-
-        if (p === THREE.MinEquation || p === THREE.MaxEquation) {
-
-          extension = extensions.get('EXT_blend_minmax');
-
-          if (extension !== null) {
-
-            if (p === THREE.MinEquation) return extension.MIN_EXT;
-            if (p === THREE.MaxEquation) return extension.MAX_EXT;
-
-          }
-
-        }
-
-        if (p === UnsignedInt248Type) {
-
-          extension = extensions.get('WEBGL_depth_texture');
-
-          if (extension !== null) return extension.UNSIGNED_INT_24_8_WEBGL;
-
-        }
-
-        return 0;
-
+        this.shaders.set(material, shader);
       }
 
-      let attributeLocations = {
-        "position": 0,
-        "color": 1,
-        "intensity": 2,
-        "classification": 3,
-        "returnNumber": 4,
-        "numberOfReturns": 5,
-        "pointSourceID": 6,
-        "indices": 7,
-        "normal": 8,
-        "spacing": 9,
-      };
-
-      class Shader {
-
-        constructor(gl, name, vsSource, fsSource) {
-          this.gl = gl;
-          this.name = name;
-          this.vsSource = vsSource;
-          this.fsSource = fsSource;
-
-          this.cache = new Map();
-
-          this.vs = null;
-          this.fs = null;
-          this.program = null;
-
-          this.uniformLocations = {};
-          this.attributeLocations = {};
-
-          this.update(vsSource, fsSource);
-        }
-
-        update(vsSource, fsSource) {
-          this.vsSource = vsSource;
-          this.fsSource = fsSource;
-
-          this.linkProgram();
-        }
-
-        compileShader(shader, source) {
-          let gl = this.gl;
-
-          gl.shaderSource(shader, source);
-
-          gl.compileShader(shader);
-
-          let success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-          if (!success) {
-            let info = gl.getShaderInfoLog(shader);
-            let numberedSource = source.split("\n").map((a, i) => `${i + 1}`.padEnd(5) + a).join("\n");
-            throw `could not compile shader ${this.name}: ${info}, \n${numberedSource}`;
-          }
-        }
-
-        linkProgram() {
-
-          let gl = this.gl;
-
-          this.uniformLocations = {};
-          this.attributeLocations = {};
-
-          gl.useProgram(null);
-
-          let cached = this.cache.get(`${this.vsSource}, ${this.fsSource}`);
-          if (cached) {
-            this.program = cached.program;
-            this.vs = cached.vs;
-            this.fs = cached.fs;
-            this.attributeLocations = cached.attributeLocations;
-            this.uniformLocations = cached.uniformLocations;
-
-            return;
-          } else {
-
-            this.vs = gl.createShader(gl.VERTEX_SHADER);
-            this.fs = gl.createShader(gl.FRAGMENT_SHADER);
-            this.program = gl.createProgram();
-
-            for (let name of Object.keys(attributeLocations)) {
-              let location = attributeLocations[name];
-              gl.bindAttribLocation(this.program, location, name);
-            }
-
-            this.compileShader(this.vs, this.vsSource);
-            this.compileShader(this.fs, this.fsSource);
-
-            let program = this.program;
-
-            gl.attachShader(program, this.vs);
-            gl.attachShader(program, this.fs);
-
-            gl.linkProgram(program);
-
-            gl.detachShader(program, this.vs);
-            gl.detachShader(program, this.fs);
-
-            let success = gl.getProgramParameter(program, gl.LINK_STATUS);
-            if (!success) {
-              let info = gl.getProgramInfoLog(program);
-              throw `could not link program ${this.name}: ${info}`;
-            }
-
-            { // attribute locations
-              let numAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
-
-              for (let i = 0; i < numAttributes; i++) {
-                let attribute = gl.getActiveAttrib(program, i);
-
-                let location = gl.getAttribLocation(program, attribute.name);
-
-                this.attributeLocations[attribute.name] = location;
-              }
-            }
-
-            { // uniform locations
-              let numUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
-
-              for (let i = 0; i < numUniforms; i++) {
-                let uniform = gl.getActiveUniform(program, i);
-
-                let location = gl.getUniformLocation(program, uniform.name);
-
-                this.uniformLocations[uniform.name] = location;
-              }
-            }
-
-            let cached = {
-              program: this.program,
-              vs: this.vs,
-              fs: this.fs,
-              attributeLocations: this.attributeLocations,
-              uniformLocations: this.uniformLocations
-            };
-
-            this.cache.set(`${this.vsSource}, ${this.fsSource}`, cached);
-          }
-
-
-
-
-        }
-
-        setUniformMatrix4(name, value) {
-          const gl = this.gl;
-          const location = this.uniformLocations[name];
-
-          if (location == null) {
-            return;
-          }
-
-          let tmp = new Float32Array(value.elements);
-          gl.uniformMatrix4fv(location, false, tmp);
-        }
-
-        setUniform1f(name, value) {
-          const gl = this.gl;
-          const location = this.uniformLocations[name];
-
-          if (location == null) {
-            return;
-          }
-
-          gl.uniform1f(location, value);
-        }
-
-        setUniformBoolean(name, value) {
-          const gl = this.gl;
-          const location = this.uniformLocations[name];
-
-          if (location == null) {
-            return;
-          }
-
-          gl.uniform1i(location, value);
-        }
-
-        setUniformTexture(name, value) {
-          const gl = this.gl;
-          const location = this.uniformLocations[name];
-
-          if (location == null) {
-            return;
-          }
-
-          gl.uniform1i(location, value);
-        }
-
-        setUniform2f(name, value) {
-          const gl = this.gl;
-          const location = this.uniformLocations[name];
-
-          if (location == null) {
-            return;
-          }
-
-          gl.uniform2f(location, value[0], value[1]);
-        }
-
-        setUniform3f(name, value) {
-          const gl = this.gl;
-          const location = this.uniformLocations[name];
-
-          if (location == null) {
-            return;
-          }
-
-          gl.uniform3f(location, value[0], value[1], value[2]);
-        }
-
-        setUniform(name, value) {
-
-          if (value.constructor === THREE.Matrix4) {
-            this.setUniformMatrix4(name, value);
-          } else if (typeof value === "number") {
-            this.setUniform1f(name, value);
-          } else if (typeof value === "boolean") {
-            this.setUniformBoolean(name, value);
-          } else if (value instanceof WebGLTexture) {
-            this.setUniformTexture(name, value);
-          } else if (value instanceof Array) {
-
-            if (value.length === 2) {
-              this.setUniform2f(name, value);
-            } else if (value.length === 3) {
-              this.setUniform3f(name, value);
-            }
-
-          } else {
-            console.error("unhandled uniform type: ", name, value);
-          }
-
-        }
-
-
-        setUniform1i(name, value) {
-          let gl = this.gl;
-          let location = this.uniformLocations[name];
-
-          if (location == null) {
-            return;
-          }
-
-          gl.uniform1i(location, value);
-        }
-
+      shader = this.shaders.get(material);
+
+      // if(material.needsUpdate){
+      {
+        let [vs, fs] = [material.vertexShader, material.fragmentShader];
+
+        const numSnapshots = material.snapEnabled ? material.numSnapshots : 0;
+        const numClipBoxes = (material.clipBoxes && material.clipBoxes.length) ? material.clipBoxes.length : 0;
+        // let numClipSpheres = (material.clipSpheres && material.clipSpheres.length) ? material.clipSpheres.length : 0;
+        const numClipSpheres = (params.clipSpheres && params.clipSpheres.length) ? params.clipSpheres.length : 0;
+        const numClipPolygons = (material.clipPolygons && material.clipPolygons.length) ? material.clipPolygons.length : 0;
+        const defines = [
+          `#define num_shadowmaps ${shadowMaps.length}`,
+          `#define num_snapshots ${numSnapshots}`,
+          `#define num_clipboxes ${numClipBoxes}`,
+          `#define num_clipspheres ${numClipSpheres}`,
+          `#define num_clippolygons ${numClipPolygons}`,
+        ];
+
+        // vs = `#define num_shadowmaps ${shadowMaps.length}\n` + vs;
+        // fs = `#define num_shadowmaps ${shadowMaps.length}\n` + fs;
+
+        const definesString = defines.join('\n');
+
+        vs = `${definesString}\n${vs}`;
+        fs = `${definesString}\n${fs}`;
+
+        shader.update(vs, fs);
+
+        material.needsUpdate = false;
       }
 
-      class WebGLTexture {
+      for (const uniformName of Object.keys(material.uniforms)) {
+        const uniform = material.uniforms[uniformName];
 
-        constructor(gl, texture) {
-          this.gl = gl;
+        if (uniform.type === 't') {
+          const texture = uniform.value;
 
-          this.texture = texture;
-          this.id = gl.createTexture();
-
-          this.target = gl.TEXTURE_2D;
-          this.version = -1;
-
-          this.update(texture);
-        }
-
-        update() {
-
-          if (!this.texture.image) {
-            this.version = this.texture.version;
-
-            return;
+          if (!texture) {
+            continue;
           }
 
-          let gl = this.gl;
-          let texture = this.texture;
+          if (!this.textures.has(texture)) {
+            const webglTexture = new WebGLTexture(gl, texture);
 
-          if (this.version === texture.version) {
-            return;
+            this.textures.set(texture, webglTexture);
           }
 
-          this.target = gl.TEXTURE_2D;
-
-          gl.bindTexture(this.target, this.id);
-
-          let level = 0;
-          let internalFormat = paramThreeToGL(gl, texture.format);
-          let width = texture.image.width;
-          let height = texture.image.height;
-          let border = 0;
-          let srcFormat = internalFormat;
-          let srcType = paramThreeToGL(gl, texture.type);
-          let data;
-
-          gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture.flipY);
-          gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha);
-          gl.pixelStorei(gl.UNPACK_ALIGNMENT, texture.unpackAlignment);
-
-          if (texture instanceof THREE.DataTexture) {
-            data = texture.image.data;
-
-            gl.texParameteri(this.target, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(this.target, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-            gl.texParameteri(this.target, gl.TEXTURE_MAG_FILTER, paramThreeToGL(gl, texture.magFilter));
-            gl.texParameteri(this.target, gl.TEXTURE_MIN_FILTER, paramThreeToGL(gl, texture.minFilter));
-
-            gl.texImage2D(this.target, level, internalFormat,
-              width, height, border, srcFormat, srcType,
-              data);
-          } else if (texture instanceof THREE.CanvasTexture) {
-            data = texture.image;
-
-            gl.texParameteri(this.target, gl.TEXTURE_WRAP_S, paramThreeToGL(gl, texture.wrapS));
-            gl.texParameteri(this.target, gl.TEXTURE_WRAP_T, paramThreeToGL(gl, texture.wrapT));
-
-            gl.texParameteri(this.target, gl.TEXTURE_MAG_FILTER, paramThreeToGL(gl, texture.magFilter));
-            gl.texParameteri(this.target, gl.TEXTURE_MIN_FILTER, paramThreeToGL(gl, texture.minFilter));
-
-            gl.texImage2D(this.target, level, internalFormat,
-              internalFormat, srcType, data);
-          }
-
-          gl.bindTexture(this.target, null);
-
-          this.version = texture.version;
-        }
-
-      }
-
-      class WebGLBuffer {
-
-        constructor() {
-          this.numElements = 0;
-          this.vao = null;
-          this.vbos = new Map();
-        }
-
-      }
-
-      class Renderer {
-
-        constructor(threeRenderer) {
-          this.threeRenderer = threeRenderer;
-          this.gl = this.threeRenderer.context;
-
-          this.buffers = new Map();
-          this.shaders = new Map();
-          this.textures = new Map();
-
-          this.glTypeMapping = new Map();
-          this.glTypeMapping.set(Float32Array, this.gl.FLOAT);
-          this.glTypeMapping.set(Uint8Array, this.gl.UNSIGNED_BYTE);
-          this.glTypeMapping.set(Uint16Array, this.gl.UNSIGNED_SHORT);
-
-          this.toggle = 0;
-        }
-
-        createBuffer(geometry) {
-          let gl = this.gl;
-          let webglBuffer = new WebGLBuffer();
-          webglBuffer.vao = gl.createVertexArray();
-          webglBuffer.numElements = geometry.attributes.position.count;
-
-          gl.bindVertexArray(webglBuffer.vao);
-
-          for (let attributeName in geometry.attributes) {
-            let bufferAttribute = geometry.attributes[attributeName];
-
-            let vbo = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-            gl.bufferData(gl.ARRAY_BUFFER, bufferAttribute.array, gl.STATIC_DRAW);
-
-            let attributeLocation = attributeLocations[attributeName];
-            let normalized = bufferAttribute.normalized;
-            let type = this.glTypeMapping.get(bufferAttribute.array.constructor);
-
-            gl.vertexAttribPointer(attributeLocation, bufferAttribute.itemSize, type, normalized, 0, 0);
-            gl.enableVertexAttribArray(attributeLocation);
-
-            webglBuffer.vbos.set(attributeName, {
-              handle: vbo,
-              name: attributeName,
-              count: bufferAttribute.count,
-              itemSize: bufferAttribute.itemSize,
-              type: geometry.attributes.position.array.constructor,
-              version: 0
-            });
-          }
-
-          gl.bindBuffer(gl.ARRAY_BUFFER, null);
-          gl.bindVertexArray(null);
-
-          return webglBuffer;
-        }
-
-        updateBuffer(geometry) {
-          let gl = this.gl;
-
-          let webglBuffer = this.buffers.get(geometry);
-
-          gl.bindVertexArray(webglBuffer.vao);
-
-          for (let attributeName in geometry.attributes) {
-            let bufferAttribute = geometry.attributes[attributeName];
-
-            let attributeLocation = attributeLocations[attributeName];
-            let normalized = bufferAttribute.normalized;
-            let type = this.glTypeMapping.get(bufferAttribute.array.constructor);
-
-            let vbo = null;
-            if (!webglBuffer.vbos.has(attributeName)) {
-              vbo = gl.createBuffer();
-
-              webglBuffer.vbos.set(attributeName, {
-                handle: vbo,
-                name: attributeName,
-                count: bufferAttribute.count,
-                itemSize: bufferAttribute.itemSize,
-                type: geometry.attributes.position.array.constructor,
-                version: bufferAttribute.version
-              });
-            } else {
-              vbo = webglBuffer.vbos.get(attributeName).handle;
-              webglBuffer.vbos.get(attributeName).version = bufferAttribute.version;
-            }
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-            gl.bufferData(gl.ARRAY_BUFFER, bufferAttribute.array, gl.STATIC_DRAW);
-            gl.vertexAttribPointer(attributeLocation, bufferAttribute.itemSize, type, normalized, 0, 0);
-            gl.enableVertexAttribArray(attributeLocation);
-          }
-
-          gl.bindBuffer(gl.ARRAY_BUFFER, null);
-          gl.bindVertexArray(null);
-        }
-
-        traverse(scene) {
-
-          let octrees = [];
-
-          let stack = [scene];
-          while (stack.length > 0) {
-
-            let node = stack.pop();
-
-            if (node instanceof PointCloudTree) {
-              octrees.push(node);
-              continue;
-            }
-
-            let visibleChildren = node.children.filter(c => c.visible);
-            stack.push(...visibleChildren);
-
-          }
-
-          let result = {
-            octrees: octrees
-          };
-
-          return result;
-        }
-
-
-
-        renderNodes(octree, nodes, visibilityTextureData, camera, target, shader, params) {
-
-          if (exports.measureTimings) performance.mark("renderNodes-start");
-
-          let gl = this.gl;
-
-          let material = params.material ? params.material : octree.material;
-          let shadowMaps = params.shadowMaps == null ? [] : params.shadowMaps;
-          let view = camera.matrixWorldInverse;
-          let worldView = new THREE.Matrix4();
-
-          let mat4holder = new Float32Array(16);
-
-          let i = 0;
-          for (let node of nodes) {
-
-            if (exports.debug.allowedNodes !== undefined) {
-              if (!exports.debug.allowedNodes.includes(node.name)) {
-                continue;
-              }
-            }
-
-            //if(![
-            //	"r42006420226",
-            //	]
-            //	.includes(node.name)){
-            //	continue;
-            //}
-
-            let world = node.sceneNode.matrixWorld;
-            worldView.multiplyMatrices(view, world);
-            //this.multiplyViewWithScaleTrans(view, world, worldView);
-
-            if (visibilityTextureData) {
-              let vnStart = visibilityTextureData.offsets.get(node);
-              shader.setUniform1f("uVNStart", vnStart);
-            }
-
-
-            let level = node.getLevel();
-
-            if (node.debug) {
-              shader.setUniform("uDebug", true);
-            } else {
-              shader.setUniform("uDebug", false);
-            }
-
-            let isLeaf;
-            if (node instanceof PointCloudOctreeNode) {
-              isLeaf = Object.keys(node.children).length === 0;
-            } else if (node instanceof PointCloudArena4DNode) {
-              isLeaf = node.geometryNode.isLeaf;
-            }
-            shader.setUniform("uIsLeafNode", isLeaf);
-
-
-            // TODO consider passing matrices in an array to avoid uniformMatrix4fv overhead
-            const lModel = shader.uniformLocations["modelMatrix"];
-            if (lModel) {
-              mat4holder.set(world.elements);
-              gl.uniformMatrix4fv(lModel, false, mat4holder);
-            }
-
-            const lModelView = shader.uniformLocations["modelViewMatrix"];
-            //mat4holder.set(worldView.elements);
-            // faster then set in chrome 63
-            for (let j = 0; j < 16; j++) {
-              mat4holder[j] = worldView.elements[j];
-            }
-            gl.uniformMatrix4fv(lModelView, false, mat4holder);
-
-            { // Clip Polygons
-              if (material.clipPolygons && material.clipPolygons.length > 0) {
-
-                let clipPolygonVCount = [];
-                let worldViewProjMatrices = [];
-
-                for (let clipPolygon of material.clipPolygons) {
-
-                  let view = clipPolygon.viewMatrix;
-                  let proj = clipPolygon.projMatrix;
-
-                  let worldViewProj = proj.clone().multiply(view).multiply(world);
-
-                  clipPolygonVCount.push(clipPolygon.markers.length);
-                  worldViewProjMatrices.push(worldViewProj);
-                }
-
-                let flattenedMatrices = [].concat(...worldViewProjMatrices.map(m => m.elements));
-
-                let flattenedVertices = new Array(8 * 3 * material.clipPolygons.length);
-                for (let i = 0; i < material.clipPolygons.length; i++) {
-                  let clipPolygon = material.clipPolygons[i];
-                  for (let j = 0; j < clipPolygon.markers.length; j++) {
-                    flattenedVertices[i * 24 + (j * 3 + 0)] = clipPolygon.markers[j].position.x;
-                    flattenedVertices[i * 24 + (j * 3 + 1)] = clipPolygon.markers[j].position.y;
-                    flattenedVertices[i * 24 + (j * 3 + 2)] = clipPolygon.markers[j].position.z;
-                  }
-                }
-
-                const lClipPolygonVCount = shader.uniformLocations["uClipPolygonVCount[0]"];
-                gl.uniform1iv(lClipPolygonVCount, clipPolygonVCount);
-
-                const lClipPolygonVP = shader.uniformLocations["uClipPolygonWVP[0]"];
-                gl.uniformMatrix4fv(lClipPolygonVP, false, flattenedMatrices);
-
-                const lClipPolygons = shader.uniformLocations["uClipPolygonVertices[0]"];
-                gl.uniform3fv(lClipPolygons, flattenedVertices);
-
-              }
-            }
-
-
-            //shader.setUniformMatrix4("modelMatrix", world);
-            //shader.setUniformMatrix4("modelViewMatrix", worldView);
-            shader.setUniform1f("uLevel", level);
-            shader.setUniform1f("uNodeSpacing", node.geometryNode.estimatedSpacing);
-
-            shader.setUniform1f("uPCIndex", i);
-            // uBBSize
-
-            if (shadowMaps.length > 0) {
-
-              const lShadowMap = shader.uniformLocations["uShadowMap[0]"];
-
-              shader.setUniform3f("uShadowColor", material.uniforms.uShadowColor.value);
-
-              let bindingStart = 5;
-              let bindingPoints = new Array(shadowMaps.length).fill(bindingStart).map((a, i) => (a + i));
-              gl.uniform1iv(lShadowMap, bindingPoints);
-
-              for (let i = 0; i < shadowMaps.length; i++) {
-                let shadowMap = shadowMaps[i];
-                let bindingPoint = bindingPoints[i];
-                let glTexture = this.threeRenderer.properties.get(shadowMap.target.texture).__webglTexture;
-
-                gl.activeTexture(gl[`TEXTURE${bindingPoint}`]);
-                gl.bindTexture(gl.TEXTURE_2D, glTexture);
-              }
-
-              {
-
-                let worldViewMatrices = shadowMaps
-                  .map(sm => sm.camera.matrixWorldInverse)
-                  .map(view => new THREE.Matrix4().multiplyMatrices(view, world));
-
-                let flattenedMatrices = [].concat(...worldViewMatrices.map(c => c.elements));
-                const lWorldView = shader.uniformLocations["uShadowWorldView[0]"];
-                gl.uniformMatrix4fv(lWorldView, false, flattenedMatrices);
-              }
-
-              {
-                let flattenedMatrices = [].concat(...shadowMaps.map(sm => sm.camera.projectionMatrix.elements));
-                const lProj = shader.uniformLocations["uShadowProj[0]"];
-                gl.uniformMatrix4fv(lProj, false, flattenedMatrices);
-              }
-            }
-
-            let geometry = node.geometryNode.geometry;
-
-            let webglBuffer = null;
-            if (!this.buffers.has(geometry)) {
-              webglBuffer = this.createBuffer(geometry);
-              this.buffers.set(geometry, webglBuffer);
-            } else {
-              webglBuffer = this.buffers.get(geometry);
-              for (let attributeName in geometry.attributes) {
-                let attribute = geometry.attributes[attributeName];
-
-                if (attribute.version > webglBuffer.vbos.get(attributeName).version) {
-                  this.updateBuffer(geometry);
-                }
-              }
-            }
-
-            gl.bindVertexArray(webglBuffer.vao);
-
-            let numPoints = webglBuffer.numElements;
-            gl.drawArrays(gl.POINTS, 0, numPoints);
-
-            i++;
-          }
-
-          gl.bindVertexArray(null);
-
-          if (exports.measureTimings) {
-            performance.mark("renderNodes-end");
-            performance.measure("render.renderNodes", "renderNodes-start", "renderNodes-end");
-          }
-        }
-
-        renderOctree(octree, nodes, camera, target, params = {}) {
-
-          let gl = this.gl;
-
-          let material = params.material ? params.material : octree.material;
-          let shadowMaps = params.shadowMaps == null ? [] : params.shadowMaps;
-          let view = camera.matrixWorldInverse;
-          let viewInv = camera.matrixWorld;
-          let proj = camera.projectionMatrix;
-          let projInv = new THREE.Matrix4().getInverse(proj);
-          let worldView = new THREE.Matrix4();
-
-          let shader = null;
-          let visibilityTextureData = null;
-
-          let currentTextureBindingPoint = 0;
-
-          if (material.pointSizeType >= 0) {
-            if (material.pointSizeType === PointSizeType.ADAPTIVE ||
-              material.pointColorType === PointColorType.LOD) {
-
-              let vnNodes = (params.vnTextureNodes != null) ? params.vnTextureNodes : nodes;
-              visibilityTextureData = octree.computeVisibilityTextureData(vnNodes, camera);
-
-              const vnt = material.visibleNodesTexture;
-              const data = vnt.image.data;
-              data.set(visibilityTextureData.data);
-              vnt.needsUpdate = true;
-
-            }
-          }
-
-          { // UPDATE SHADER AND TEXTURES
-            if (!this.shaders.has(material)) {
-              let [vs, fs] = [material.vertexShader, material.fragmentShader];
-              let shader = new Shader(gl, "pointcloud", vs, fs);
-
-              this.shaders.set(material, shader);
-            }
-
-            shader = this.shaders.get(material);
-
-            //if(material.needsUpdate){
-            {
-              let [vs, fs] = [material.vertexShader, material.fragmentShader];
-
-              let numSnapshots = material.snapEnabled ? material.numSnapshots : 0;
-              let numClipBoxes = (material.clipBoxes && material.clipBoxes.length) ? material.clipBoxes.length : 0;
-              //let numClipSpheres = (material.clipSpheres && material.clipSpheres.length) ? material.clipSpheres.length : 0;
-              let numClipSpheres = (params.clipSpheres && params.clipSpheres.length) ? params.clipSpheres.length : 0;
-              let numClipPolygons = (material.clipPolygons && material.clipPolygons.length) ? material.clipPolygons.length : 0;
-              let defines = [
-                `#define num_shadowmaps ${shadowMaps.length}`,
-                `#define num_snapshots ${numSnapshots}`,
-                `#define num_clipboxes ${numClipBoxes}`,
-                `#define num_clipspheres ${numClipSpheres}`,
-                `#define num_clippolygons ${numClipPolygons}`,
-              ];
-
-              //vs = `#define num_shadowmaps ${shadowMaps.length}\n` + vs;
-              //fs = `#define num_shadowmaps ${shadowMaps.length}\n` + fs;
-
-              let definesString = defines.join("\n");
-
-              vs = `${definesString}\n${vs}`;
-              fs = `${definesString}\n${fs}`;
-
-              shader.update(vs, fs);
-
-              material.needsUpdate = false;
-            }
-
-            for (let uniformName of Object.keys(material.uniforms)) {
-              let uniform = material.uniforms[uniformName];
-
-              if (uniform.type == "t") {
-
-                let texture = uniform.value;
-
-                if (!texture) {
-                  continue;
-                }
-
-                if (!this.textures.has(texture)) {
-                  let webglTexture = new WebGLTexture(gl, texture);
-
-                  this.textures.set(texture, webglTexture);
-                }
-
-                let webGLTexture = this.textures.get(texture);
-                webGLTexture.update();
-
-
-              }
-            }
-          }
-
-          gl.useProgram(shader.program);
-
-          let transparent = false;
-          if (params.transparent !== undefined) {
-            transparent = params.transparent && material.opacity < 1;
-          } else {
-            transparent = material.opacity < 1;
-          }
-
-          if (transparent) {
-            gl.enable(gl.BLEND);
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-            gl.depthMask(false);
-            gl.disable(gl.DEPTH_TEST);
-          } else {
-            gl.disable(gl.BLEND);
-            gl.depthMask(true);
-            gl.enable(gl.DEPTH_TEST);
-          }
-
-          if (params.blendFunc !== undefined) {
-            gl.enable(gl.BLEND);
-            gl.blendFunc(...params.blendFunc);
-          }
-
-          if (params.depthTest !== undefined) {
-            if (params.depthTest === true) {
-              gl.enable(gl.DEPTH_TEST);
-            } else {
-              gl.disable(gl.DEPTH_TEST);
-            }
-          }
-
-          if (params.depthWrite !== undefined) {
-            if (params.depthWrite === true) {
-              gl.depthMask(true);
-            } else {
-              gl.depthMask(false);
-            }
-
-          }
-
-
-          { // UPDATE UNIFORMS
-            shader.setUniformMatrix4("projectionMatrix", proj);
-            shader.setUniformMatrix4("viewMatrix", view);
-            shader.setUniformMatrix4("uViewInv", viewInv);
-            shader.setUniformMatrix4("uProjInv", projInv);
-
-            let screenWidth = target ? target.width : material.screenWidth;
-            let screenHeight = target ? target.height : material.screenHeight;
-
-            shader.setUniform1f("uScreenWidth", screenWidth);
-            shader.setUniform1f("uScreenHeight", screenHeight);
-            shader.setUniform1f("fov", Math.PI * camera.fov / 180);
-            shader.setUniform1f("near", camera.near);
-            shader.setUniform1f("far", camera.far);
-
-            if (camera instanceof THREE.OrthographicCamera) {
-              shader.setUniform("uUseOrthographicCamera", true);
-              shader.setUniform("uOrthoWidth", camera.right - camera.left);
-              shader.setUniform("uOrthoHeight", camera.top - camera.bottom);
-            } else {
-              shader.setUniform("uUseOrthographicCamera", false);
-            }
-
-            if (material.clipBoxes.length + material.clipPolygons.length === 0) {
-              shader.setUniform1i("clipTask", ClipTask.NONE);
-            } else {
-              shader.setUniform1i("clipTask", material.clipTask);
-            }
-
-            shader.setUniform1i("clipMethod", material.clipMethod);
-
-            if (material.clipBoxes && material.clipBoxes.length > 0) {
-              //let flattenedMatrices = [].concat(...material.clipBoxes.map(c => c.inverse.elements));
-
-              //const lClipBoxes = shader.uniformLocations["clipBoxes[0]"];
-              //gl.uniformMatrix4fv(lClipBoxes, false, flattenedMatrices);
-
-              const lClipBoxes = shader.uniformLocations["clipBoxes[0]"];
-              gl.uniformMatrix4fv(lClipBoxes, false, material.uniforms.clipBoxes.value);
-            }
-
-            // TODO CLIPSPHERES
-            if (params.clipSpheres && params.clipSpheres.length > 0) {
-
-              let clipSpheres = params.clipSpheres;
-
-              let matrices = [];
-              for (let clipSphere of clipSpheres) {
-                //let mScale = new THREE.Matrix4().makeScale(...clipSphere.scale.toArray());
-                //let mTranslate = new THREE.Matrix4().makeTranslation(...clipSphere.position.toArray());
-
-                //let clipToWorld = new THREE.Matrix4().multiplyMatrices(mTranslate, mScale);
-                let clipToWorld = clipSphere.matrixWorld;
-                let viewToWorld = camera.matrixWorld;
-                let worldToClip = new THREE.Matrix4().getInverse(clipToWorld);
-
-                let viewToClip = new THREE.Matrix4().multiplyMatrices(worldToClip, viewToWorld);
-
-                matrices.push(viewToClip);
-              }
-
-              let flattenedMatrices = [].concat(...matrices.map(matrix => matrix.elements));
-
-              const lClipSpheres = shader.uniformLocations["uClipSpheres[0]"];
-              gl.uniformMatrix4fv(lClipSpheres, false, flattenedMatrices);
-
-              //const lClipSpheres = shader.uniformLocations["uClipSpheres[0]"];
-              //gl.uniformMatrix4fv(lClipSpheres, false, material.uniforms.clipSpheres.value);
-            }
-
-            shader.setUniform1f("size", material.size);
-            shader.setUniform1f("maxSize", material.uniforms.maxSize.value);
-            shader.setUniform1f("minSize", material.uniforms.minSize.value);
-
-            // uniform float uPCIndex
-            shader.setUniform1f("uOctreeSpacing", material.spacing);
-            shader.setUniform("uOctreeSize", material.uniforms.octreeSize.value);
-
-
-            //uniform vec3 uColor;
-            shader.setUniform3f("uColor", material.color.toArray());
-            //uniform float opacity;
-            shader.setUniform1f("uOpacity", material.opacity);
-
-            shader.setUniform2f("elevationRange", material.elevationRange);
-            shader.setUniform2f("intensityRange", material.intensityRange);
-            //uniform float intensityGamma;
-            //uniform float intensityContrast;
-            //uniform float intensityBrightness;
-            shader.setUniform1f("intensityGamma", material.intensityGamma);
-            shader.setUniform1f("intensityContrast", material.intensityContrast);
-            shader.setUniform1f("intensityBrightness", material.intensityBrightness);
-
-            shader.setUniform1f("rgbGamma", material.rgbGamma);
-            shader.setUniform1f("rgbContrast", material.rgbContrast);
-            shader.setUniform1f("rgbBrightness", material.rgbBrightness);
-            shader.setUniform1f("uTransition", material.transition);
-            shader.setUniform1f("wRGB", material.weightRGB);
-            shader.setUniform1f("wIntensity", material.weightIntensity);
-            shader.setUniform1f("wElevation", material.weightElevation);
-            shader.setUniform1f("wClassification", material.weightClassification);
-            shader.setUniform1f("wReturnNumber", material.weightReturnNumber);
-            shader.setUniform1f("wSourceID", material.weightSourceID);
-
-            let vnWebGLTexture = this.textures.get(material.visibleNodesTexture);
-            shader.setUniform1i("visibleNodesTexture", currentTextureBindingPoint);
-            gl.activeTexture(gl.TEXTURE0 + currentTextureBindingPoint);
-            gl.bindTexture(vnWebGLTexture.target, vnWebGLTexture.id);
-            currentTextureBindingPoint++;
-
-            let gradientTexture = this.textures.get(material.gradientTexture);
-            shader.setUniform1i("gradient", currentTextureBindingPoint);
-            gl.activeTexture(gl.TEXTURE0 + currentTextureBindingPoint);
-            gl.bindTexture(gradientTexture.target, gradientTexture.id);
-            currentTextureBindingPoint++;
-
-            let classificationTexture = this.textures.get(material.classificationTexture);
-            shader.setUniform1i("classificationLUT", currentTextureBindingPoint);
-            gl.activeTexture(gl.TEXTURE0 + currentTextureBindingPoint);
-            gl.bindTexture(classificationTexture.target, classificationTexture.id);
-            currentTextureBindingPoint++;
-
-
-            if (material.snapEnabled === true) {
-
-              {
-                const lSnapshot = shader.uniformLocations["uSnapshot[0]"];
-                const lSnapshotDepth = shader.uniformLocations["uSnapshotDepth[0]"];
-
-                let bindingStart = currentTextureBindingPoint;
-                let lSnapshotBindingPoints = new Array(5).fill(bindingStart).map((a, i) => (a + i));
-                let lSnapshotDepthBindingPoints = new Array(5)
-                  .fill(1 + Math.max(...lSnapshotBindingPoints))
-                  .map((a, i) => (a + i));
-                currentTextureBindingPoint = 1 + Math.max(...lSnapshotDepthBindingPoints);
-
-                gl.uniform1iv(lSnapshot, lSnapshotBindingPoints);
-                gl.uniform1iv(lSnapshotDepth, lSnapshotDepthBindingPoints);
-
-                for (let i = 0; i < 5; i++) {
-                  let texture = material.uniforms[`uSnapshot`].value[i];
-                  let textureDepth = material.uniforms[`uSnapshotDepth`].value[i];
-
-                  if (!texture) {
-                    break;
-                  }
-
-                  let snapTexture = this.threeRenderer.properties.get(texture).__webglTexture;
-                  let snapTextureDepth = this.threeRenderer.properties.get(textureDepth).__webglTexture;
-
-                  let bindingPoint = lSnapshotBindingPoints[i];
-                  let depthBindingPoint = lSnapshotDepthBindingPoints[i];
-
-                  gl.activeTexture(gl[`TEXTURE${bindingPoint}`]);
-                  gl.bindTexture(gl.TEXTURE_2D, snapTexture);
-
-                  gl.activeTexture(gl[`TEXTURE${depthBindingPoint}`]);
-                  gl.bindTexture(gl.TEXTURE_2D, snapTextureDepth);
-                }
-              }
-
-              {
-                let flattenedMatrices = [].concat(...material.uniforms.uSnapView.value.map(c => c.elements));
-                const lSnapView = shader.uniformLocations["uSnapView[0]"];
-                gl.uniformMatrix4fv(lSnapView, false, flattenedMatrices);
-              }
-              {
-                let flattenedMatrices = [].concat(...material.uniforms.uSnapProj.value.map(c => c.elements));
-                const lSnapProj = shader.uniformLocations["uSnapProj[0]"];
-                gl.uniformMatrix4fv(lSnapProj, false, flattenedMatrices);
-              }
-              {
-                let flattenedMatrices = [].concat(...material.uniforms.uSnapProjInv.value.map(c => c.elements));
-                const lSnapProjInv = shader.uniformLocations["uSnapProjInv[0]"];
-                gl.uniformMatrix4fv(lSnapProjInv, false, flattenedMatrices);
-              }
-              {
-                let flattenedMatrices = [].concat(...material.uniforms.uSnapViewInv.value.map(c => c.elements));
-                const lSnapViewInv = shader.uniformLocations["uSnapViewInv[0]"];
-                gl.uniformMatrix4fv(lSnapViewInv, false, flattenedMatrices);
-              }
-
-            }
-          }
-
-          this.renderNodes(octree, nodes, visibilityTextureData, camera, target, shader, params);
-
-          gl.activeTexture(gl.TEXTURE2);
-          gl.bindTexture(gl.TEXTURE_2D, null);
-          gl.activeTexture(gl.TEXTURE0);
-        }
-
-        render(scene, camera, target = null, params = {}) {
-
-          const gl = this.gl;
-
-          // PREPARE 
-          if (target != null) {
-            this.threeRenderer.setRenderTarget(target);
-          }
-
-          camera.updateProjectionMatrix();
-
-          const traversalResult = this.traverse(scene);
-
-
-          // RENDER
-          for (const octree of traversalResult.octrees) {
-            let nodes = octree.visibleNodes;
-            this.renderOctree(octree, nodes, camera, target, params);
-          }
-
-
-          // CLEANUP
-          gl.activeTexture(gl.TEXTURE1);
-          gl.bindTexture(gl.TEXTURE_2D, null);
-
-          this.threeRenderer.state.reset();
-        }
-
-
-
-      }
-
-      class ProfileData {
-        constructor(profile) {
-          this.profile = profile;
-
-          this.segments = [];
-          this.boundingBox = new THREE.Box3();
-
-          for (let i = 0; i < profile.points.length - 1; i++) {
-            let start = profile.points[i];
-            let end = profile.points[i + 1];
-
-            let startGround = new THREE.Vector3(start.x, start.y, 0);
-            let endGround = new THREE.Vector3(end.x, end.y, 0);
-
-            let center = new THREE.Vector3().addVectors(endGround, startGround).multiplyScalar(0.5);
-            let length = startGround.distanceTo(endGround);
-            let side = new THREE.Vector3().subVectors(endGround, startGround).normalize();
-            let up = new THREE.Vector3(0, 0, 1);
-            let forward = new THREE.Vector3().crossVectors(side, up).normalize();
-            let N = forward;
-            let cutPlane = new THREE.Plane().setFromNormalAndCoplanarPoint(N, startGround);
-            let halfPlane = new THREE.Plane().setFromNormalAndCoplanarPoint(side, center);
-
-            let segment = {
-              start: start,
-              end: end,
-              cutPlane: cutPlane,
-              halfPlane: halfPlane,
-              length: length,
-              points: new Points()
-            };
-
-            this.segments.push(segment);
-          }
-        }
-
-        size() {
-          let size = 0;
-          for (let segment of this.segments) {
-            size += segment.points.numPoints;
-          }
-
-          return size;
+          const webGLTexture = this.textures.get(texture);
+          webGLTexture.update();
         }
       }
-
-      class ProfileRequest {
-        constructor(pointcloud, profile, maxDepth, callback) {
-          this.pointcloud = pointcloud;
-          this.profile = profile;
-          this.maxDepth = maxDepth || Number.MAX_VALUE;
-          this.callback = callback;
-          this.temporaryResult = new ProfileData(this.profile);
-          this.pointsServed = 0;
-          this.highestLevelServed = 0;
-
-          this.priorityQueue = new BinaryHeap(function (x) { return 1 / x.weight; });
-
-          this.initialize();
-        }
-
-        initialize() {
-          this.priorityQueue.push({ node: this.pointcloud.pcoGeometry.root, weight: Infinity });
-        };
-
-        // traverse the node and add intersecting descendants to queue
-        traverse(node) {
-          let stack = [];
-          for (let i = 0; i < 8; i++) {
-            let child = node.children[i];
-            if (child && this.pointcloud.nodeIntersectsProfile(child, this.profile)) {
-              stack.push(child);
-            }
-          }
-
-          while (stack.length > 0) {
-            let node = stack.pop();
-            let weight = node.boundingSphere.radius;
-
-            this.priorityQueue.push({ node: node, weight: weight });
-
-            // add children that intersect the cutting plane
-            if (node.level < this.maxDepth) {
-              for (let i = 0; i < 8; i++) {
-                let child = node.children[i];
-                if (child && this.pointcloud.nodeIntersectsProfile(child, this.profile)) {
-                  stack.push(child);
-                }
-              }
-            }
-          }
-        }
-
-        update() {
-          if (!this.updateGeneratorInstance) {
-            this.updateGeneratorInstance = this.updateGenerator();
-          }
-
-          let result = this.updateGeneratorInstance.next();
-          if (result.done) {
-            this.updateGeneratorInstance = null;
-          }
-        }
-
-        * updateGenerator() {
-          // load nodes in queue
-          // if hierarchy expands, also load nodes from expanded hierarchy
-          // once loaded, add data to this.points and remove node from queue
-          // only evaluate 1-50 nodes per frame to maintain responsiveness
-
-          let start = performance.now();
-
-          let maxNodesPerUpdate = 1;
-          let intersectedNodes = [];
-
-          for (let i = 0; i < Math.min(maxNodesPerUpdate, this.priorityQueue.size()); i++) {
-            let element = this.priorityQueue.pop();
-            let node = element.node;
-
-            if (node.level > this.maxDepth) {
-              continue;
-            }
-
-            if (node.loaded) {
-              // add points to result
-              intersectedNodes.push(node);
-              exports.lru.touch(node);
-              this.highestLevelServed = Math.max(node.getLevel(), this.highestLevelServed);
-
-              let doTraverse = (node.level % node.pcoGeometry.hierarchyStepSize) === 0 && node.hasChildren;
-              doTraverse = doTraverse || node.getLevel() === 0;
-              if (doTraverse) {
-                this.traverse(node);
-              }
-            } else {
-              node.load();
-              this.priorityQueue.push(element);
-            }
-          }
-
-          if (intersectedNodes.length > 0) {
-
-            for (let done of this.getPointsInsideProfile(intersectedNodes, this.temporaryResult)) {
-              if (!done) {
-                //console.log("updateGenerator yields");
-                yield false;
-              }
-            }
-            if (this.temporaryResult.size() > 100) {
-              this.pointsServed += this.temporaryResult.size();
-              this.callback.onProgress({ request: this, points: this.temporaryResult });
-              this.temporaryResult = new ProfileData(this.profile);
-            }
-          }
-
-          if (this.priorityQueue.size() === 0) {
-            // we're done! inform callback and remove from pending requests
-
-            if (this.temporaryResult.size() > 0) {
-              this.pointsServed += this.temporaryResult.size();
-              this.callback.onProgress({ request: this, points: this.temporaryResult });
-              this.temporaryResult = new ProfileData(this.profile);
-            }
-
-            this.callback.onFinish({ request: this });
-
-            let index = this.pointcloud.profileRequests.indexOf(this);
-            if (index >= 0) {
-              this.pointcloud.profileRequests.splice(index, 1);
-            }
-          }
-
-          yield true;
-        };
-
-        * getAccepted(numPoints, node, matrix, segment, segmentDir, points, totalMileage) {
-          let checkpoint = performance.now();
-
-          let accepted = new Uint32Array(numPoints);
-          let mileage = new Float64Array(numPoints);
-          let acceptedPositions = new Float32Array(numPoints * 3);
-          let numAccepted = 0;
-
-          let pos = new THREE.Vector3();
-          let svp = new THREE.Vector3();
-
-          let view = new Float32Array(node.geometry.attributes.position.array);
-
-          for (let i = 0; i < numPoints; i++) {
-
-            pos.set(
-              view[i * 3 + 0],
-              view[i * 3 + 1],
-              view[i * 3 + 2]);
-
-            pos.applyMatrix4(matrix);
-            let distance = Math.abs(segment.cutPlane.distanceToPoint(pos));
-            let centerDistance = Math.abs(segment.halfPlane.distanceToPoint(pos));
-
-            if (distance < this.profile.width / 2 && centerDistance < segment.length / 2) {
-              svp.subVectors(pos, segment.start);
-              let localMileage = segmentDir.dot(svp);
-
-              accepted[numAccepted] = i;
-              mileage[numAccepted] = localMileage + totalMileage;
-              points.boundingBox.expandByPoint(pos);
-
-              acceptedPositions[3 * numAccepted + 0] = pos.x;
-              acceptedPositions[3 * numAccepted + 1] = pos.y;
-              acceptedPositions[3 * numAccepted + 2] = pos.z;
-
-              numAccepted++;
-            }
-
-            if ((i % 1000) === 0) {
-              let duration = performance.now() - checkpoint;
-              if (duration > 4) {
-                //console.log(`getAccepted yield after ${duration}ms`);
-                yield false;
-                checkpoint = performance.now();
-              }
-            }
-          }
-
-          accepted = accepted.subarray(0, numAccepted);
-          mileage = mileage.subarray(0, numAccepted);
-          acceptedPositions = acceptedPositions.subarray(0, numAccepted * 3);
-
-          //let end = performance.now();
-          //let duration = end - start;
-          //console.log("accepted duration ", duration)
-
-          //console.log(`getAccepted finished`);
-
-          yield [accepted, mileage, acceptedPositions];
-        }
-
-        * getPointsInsideProfile(nodes, target) {
-          let checkpoint = performance.now();
-          let totalMileage = 0;
-
-          let pointsProcessed = 0;
-
-          for (let segment of target.segments) {
-            for (let node of nodes) {
-              let numPoints = node.numPoints;
-              let geometry = node.geometry;
-
-              if (!numPoints) {
-                continue;
-              }
-
-              { // skip if current node doesn't intersect current segment
-                let bbWorld = node.boundingBox.clone().applyMatrix4(this.pointcloud.matrixWorld);
-                let bsWorld = bbWorld.getBoundingSphere(new THREE.Sphere());
-
-                let start = new THREE.Vector3(segment.start.x, segment.start.y, bsWorld.center.z);
-                let end = new THREE.Vector3(segment.end.x, segment.end.y, bsWorld.center.z);
-
-                let closest = new THREE.Line3(start, end).closestPointToPoint(bsWorld.center, true, new THREE.Vector3());
-                let distance = closest.distanceTo(bsWorld.center);
-
-                let intersects = (distance < (bsWorld.radius + target.profile.width));
-
-                if (!intersects) {
-                  continue;
-                }
-              }
-
-              //{// DEBUG
-              //	console.log(node.name);
-              //	let boxHelper = new Potree.Box3Helper(node.getBoundingBox());
-              //	boxHelper.matrixAutoUpdate = false;
-              //	boxHelper.matrix.copy(viewer.scene.pointclouds[0].matrixWorld);
-              //	viewer.scene.scene.add(boxHelper);
-              //}
-
-              let sv = new THREE.Vector3().subVectors(segment.end, segment.start).setZ(0);
-              let segmentDir = sv.clone().normalize();
-
-              let points = new Points();
-
-              let nodeMatrix = new THREE.Matrix4().makeTranslation(...node.boundingBox.min.toArray());
-
-              let matrix = new THREE.Matrix4().multiplyMatrices(
-                this.pointcloud.matrixWorld, nodeMatrix);
-
-              pointsProcessed = pointsProcessed + numPoints;
-
-              let accepted = null;
-              let mileage = null;
-              let acceptedPositions = null;
-              for (let result of this.getAccepted(numPoints, node, matrix, segment, segmentDir, points, totalMileage)) {
-                if (!result) {
-                  let duration = performance.now() - checkpoint;
-                  //console.log(`getPointsInsideProfile yield after ${duration}ms`);
-                  yield false;
-                  checkpoint = performance.now();
-                } else {
-                  [accepted, mileage, acceptedPositions] = result;
-                }
-              }
-
-              let duration = performance.now() - checkpoint;
-              if (duration > 4) {
-                //console.log(`getPointsInsideProfile yield after ${duration}ms`);
-                yield false;
-                checkpoint = performance.now();
-              }
-
-              points.data.position = acceptedPositions;
-
-              let relevantAttributes = Object.keys(geometry.attributes).filter(a => !["position", "indices"].includes(a));
-              for (let attributeName of relevantAttributes) {
-
-                let attribute = geometry.attributes[attributeName];
-                let numElements = attribute.array.length / numPoints;
-
-                if (numElements !== parseInt(numElements)) {
-                  debugger;
-                }
-
-                let Type = attribute.array.constructor;
-
-                let filteredBuffer = new Type(numElements * accepted.length);
-
-                let source = attribute.array;
-                let target = filteredBuffer;
-
-                for (let i = 0; i < accepted.length; i++) {
-
-                  let index = accepted[i];
-
-                  let start = index * numElements;
-                  let end = start + numElements;
-                  let sub = source.subarray(start, end);
-
-                  target.set(sub, i * numElements);
-                }
-
-                points.data[attributeName] = filteredBuffer;
-              }
-
-              points.data['mileage'] = mileage;
-              points.numPoints = accepted.length;
-
-              segment.points.add(points);
-            }
-
-            totalMileage += segment.length;
-          }
-
-          for (let segment of target.segments) {
-            target.boundingBox.union(segment.points.boundingBox);
-          }
-
-          //console.log(`getPointsInsideProfile finished`);
-          yield true;
-        };
-
-        finishLevelThenCancel() {
-          if (this.cancelRequested) {
-            return;
-          }
-
-          this.maxDepth = this.highestLevelServed;
-          this.cancelRequested = true;
-
-          //console.log(`maxDepth: ${this.maxDepth}`);
-        };
-
-        cancel() {
-          this.callback.onCancel();
-
-          this.priorityQueue = new BinaryHeap(function (x) { return 1 / x.weight; });
-
-          let index = this.pointcloud.profileRequests.indexOf(this);
-          if (index >= 0) {
-            this.pointcloud.profileRequests.splice(index, 1);
-          }
-        };
+    }
+
+    gl.useProgram(shader.program);
+
+    let transparent = false;
+    if (params.transparent !== undefined) {
+      transparent = params.transparent && material.opacity < 1;
+    } else {
+      transparent = material.opacity < 1;
+    }
+
+    if (transparent) {
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+      gl.depthMask(false);
+      gl.disable(gl.DEPTH_TEST);
+    } else {
+      gl.disable(gl.BLEND);
+      gl.depthMask(true);
+      gl.enable(gl.DEPTH_TEST);
+    }
+
+    if (params.blendFunc !== undefined) {
+      gl.enable(gl.BLEND);
+      gl.blendFunc(...params.blendFunc);
+    }
+
+    if (params.depthTest !== undefined) {
+      if (params.depthTest === true) {
+        gl.enable(gl.DEPTH_TEST);
+      } else {
+        gl.disable(gl.DEPTH_TEST);
+      }
+    }
+
+    if (params.depthWrite !== undefined) {
+      if (params.depthWrite === true) {
+        gl.depthMask(true);
+      } else {
+        gl.depthMask(false);
+      }
+    }
+
+
+    { // UPDATE UNIFORMS
+      shader.setUniformMatrix4('projectionMatrix', proj);
+      shader.setUniformMatrix4('viewMatrix', view);
+      shader.setUniformMatrix4('uViewInv', viewInv);
+      shader.setUniformMatrix4('uProjInv', projInv);
+
+      const screenWidth = target ? target.width : material.screenWidth;
+      const screenHeight = target ? target.height : material.screenHeight;
+
+      shader.setUniform1f('uScreenWidth', screenWidth);
+      shader.setUniform1f('uScreenHeight', screenHeight);
+      shader.setUniform1f('fov', Math.PI * camera.fov / 180);
+      shader.setUniform1f('near', camera.near);
+      shader.setUniform1f('far', camera.far);
+
+      if (camera instanceof THREE.OrthographicCamera) {
+        shader.setUniform('uUseOrthographicCamera', true);
+        shader.setUniform('uOrthoWidth', camera.right - camera.left);
+        shader.setUniform('uOrthoHeight', camera.top - camera.bottom);
+      } else {
+        shader.setUniform('uUseOrthographicCamera', false);
       }
 
-      class Version {
-
-        constructor(version) {
-          this.version = version;
-          let vmLength = (version.indexOf('.') === -1) ? version.length : version.indexOf('.');
-          this.versionMajor = parseInt(version.substr(0, vmLength));
-          this.versionMinor = parseInt(version.substr(vmLength + 1));
-          if (this.versionMinor.length === 0) {
-            this.versionMinor = 0;
-          }
-        }
-
-        newerThan(version) {
-          let v = new Version(version);
-
-          if (this.versionMajor > v.versionMajor) {
-            return true;
-          } else if (this.versionMajor === v.versionMajor && this.versionMinor > v.versionMinor) {
-            return true;
-          } else {
-            return false;
-          }
-        }
-
-        equalOrHigher(version) {
-          let v = new Version(version);
-
-          if (this.versionMajor > v.versionMajor) {
-            return true;
-          } else if (this.versionMajor === v.versionMajor && this.versionMinor >= v.versionMinor) {
-            return true;
-          } else {
-            return false;
-          }
-        }
-
-        upTo(version) {
-          return !this.newerThan(version);
-        }
-
+      if (material.clipBoxes.length + material.clipPolygons.length === 0) {
+        shader.setUniform1i('clipTask', ClipTask.NONE);
+      } else {
+        shader.setUniform1i('clipTask', material.clipTask);
       }
 
-      class WorkerPool {
-        constructor() {
-          this.workers = {};
+      shader.setUniform1i('clipMethod', material.clipMethod);
+
+      if (material.clipBoxes && material.clipBoxes.length > 0) {
+        // let flattenedMatrices = [].concat(...material.clipBoxes.map(c => c.inverse.elements));
+
+        // const lClipBoxes = shader.uniformLocations["clipBoxes[0]"];
+        // gl.uniformMatrix4fv(lClipBoxes, false, flattenedMatrices);
+
+        const lClipBoxes = shader.uniformLocations['clipBoxes[0]'];
+        gl.uniformMatrix4fv(lClipBoxes, false, material.uniforms.clipBoxes.value);
+      }
+
+      // TODO CLIPSPHERES
+      if (params.clipSpheres && params.clipSpheres.length > 0) {
+        const clipSpheres = params.clipSpheres;
+
+        const matrices = [];
+        for (const clipSphere of clipSpheres) {
+          // let mScale = new THREE.Matrix4().makeScale(...clipSphere.scale.toArray());
+          // let mTranslate = new THREE.Matrix4().makeTranslation(...clipSphere.position.toArray());
+
+          // let clipToWorld = new THREE.Matrix4().multiplyMatrices(mTranslate, mScale);
+          const clipToWorld = clipSphere.matrixWorld;
+          const viewToWorld = camera.matrixWorld;
+          const worldToClip = new THREE.Matrix4().getInverse(clipToWorld);
+
+          const viewToClip = new THREE.Matrix4().multiplyMatrices(worldToClip, viewToWorld);
+
+          matrices.push(viewToClip);
         }
 
-        getWorker(url) {
-          if (!this.workers[url]) {
-            this.workers[url] = [];
+        const flattenedMatrices = [].concat(...matrices.map(matrix => matrix.elements));
+
+        const lClipSpheres = shader.uniformLocations['uClipSpheres[0]'];
+        gl.uniformMatrix4fv(lClipSpheres, false, flattenedMatrices);
+
+        // const lClipSpheres = shader.uniformLocations["uClipSpheres[0]"];
+        // gl.uniformMatrix4fv(lClipSpheres, false, material.uniforms.clipSpheres.value);
+      }
+
+      shader.setUniform1f('size', material.size);
+      shader.setUniform1f('maxSize', material.uniforms.maxSize.value);
+      shader.setUniform1f('minSize', material.uniforms.minSize.value);
+
+      // uniform float uPCIndex
+      shader.setUniform1f('uOctreeSpacing', material.spacing);
+      shader.setUniform('uOctreeSize', material.uniforms.octreeSize.value);
+
+
+      // uniform vec3 uColor;
+      shader.setUniform3f('uColor', material.color.toArray());
+      // uniform float opacity;
+      shader.setUniform1f('uOpacity', material.opacity);
+
+      shader.setUniform2f('elevationRange', material.elevationRange);
+      shader.setUniform2f('intensityRange', material.intensityRange);
+      // uniform float intensityGamma;
+      // uniform float intensityContrast;
+      // uniform float intensityBrightness;
+      shader.setUniform1f('intensityGamma', material.intensityGamma);
+      shader.setUniform1f('intensityContrast', material.intensityContrast);
+      shader.setUniform1f('intensityBrightness', material.intensityBrightness);
+
+      shader.setUniform1f('rgbGamma', material.rgbGamma);
+      shader.setUniform1f('rgbContrast', material.rgbContrast);
+      shader.setUniform1f('rgbBrightness', material.rgbBrightness);
+      shader.setUniform1f('uTransition', material.transition);
+      shader.setUniform1f('wRGB', material.weightRGB);
+      shader.setUniform1f('wIntensity', material.weightIntensity);
+      shader.setUniform1f('wElevation', material.weightElevation);
+      shader.setUniform1f('wClassification', material.weightClassification);
+      shader.setUniform1f('wReturnNumber', material.weightReturnNumber);
+      shader.setUniform1f('wSourceID', material.weightSourceID);
+
+      const vnWebGLTexture = this.textures.get(material.visibleNodesTexture);
+      shader.setUniform1i('visibleNodesTexture', currentTextureBindingPoint);
+      gl.activeTexture(gl.TEXTURE0 + currentTextureBindingPoint);
+      gl.bindTexture(vnWebGLTexture.target, vnWebGLTexture.id);
+      currentTextureBindingPoint++;
+
+      const gradientTexture = this.textures.get(material.gradientTexture);
+      shader.setUniform1i('gradient', currentTextureBindingPoint);
+      gl.activeTexture(gl.TEXTURE0 + currentTextureBindingPoint);
+      gl.bindTexture(gradientTexture.target, gradientTexture.id);
+      currentTextureBindingPoint++;
+
+      const classificationTexture = this.textures.get(material.classificationTexture);
+      shader.setUniform1i('classificationLUT', currentTextureBindingPoint);
+      gl.activeTexture(gl.TEXTURE0 + currentTextureBindingPoint);
+      gl.bindTexture(classificationTexture.target, classificationTexture.id);
+      currentTextureBindingPoint++;
+
+
+      if (material.snapEnabled === true) {
+        {
+          const lSnapshot = shader.uniformLocations['uSnapshot[0]'];
+          const lSnapshotDepth = shader.uniformLocations['uSnapshotDepth[0]'];
+
+          const bindingStart = currentTextureBindingPoint;
+          const lSnapshotBindingPoints = new Array(5).fill(bindingStart).map((a, i) => (a + i));
+          const lSnapshotDepthBindingPoints = new Array(5)
+            .fill(1 + Math.max(...lSnapshotBindingPoints))
+            .map((a, i) => (a + i));
+          currentTextureBindingPoint = 1 + Math.max(...lSnapshotDepthBindingPoints);
+
+          gl.uniform1iv(lSnapshot, lSnapshotBindingPoints);
+          gl.uniform1iv(lSnapshotDepth, lSnapshotDepthBindingPoints);
+
+          for (let i = 0; i < 5; i++) {
+            const texture = material.uniforms.uSnapshot.value[i];
+            const textureDepth = material.uniforms.uSnapshotDepth.value[i];
+
+            if (!texture) {
+              break;
+            }
+
+            const snapTexture = this.threeRenderer.properties.get(texture).__webglTexture;
+            const snapTextureDepth = this.threeRenderer.properties.get(textureDepth).__webglTexture;
+
+            const bindingPoint = lSnapshotBindingPoints[i];
+            const depthBindingPoint = lSnapshotDepthBindingPoints[i];
+
+            gl.activeTexture(gl[`TEXTURE${bindingPoint}`]);
+            gl.bindTexture(gl.TEXTURE_2D, snapTexture);
+
+            gl.activeTexture(gl[`TEXTURE${depthBindingPoint}`]);
+            gl.bindTexture(gl.TEXTURE_2D, snapTextureDepth);
           }
-
-          if (this.workers[url].length === 0) {
-            let worker = new Worker(url);
-            this.workers[url].push(worker);
-          }
-
-          let worker = this.workers[url].pop();
-
-          return worker;
         }
 
-        returnWorker(url, worker) {
-          this.workers[url].push(worker);
+        {
+          const flattenedMatrices = [].concat(...material.uniforms.uSnapView.value.map(c => c.elements));
+          const lSnapView = shader.uniformLocations['uSnapView[0]'];
+          gl.uniformMatrix4fv(lSnapView, false, flattenedMatrices);
+        }
+        {
+          const flattenedMatrices = [].concat(...material.uniforms.uSnapProj.value.map(c => c.elements));
+          const lSnapProj = shader.uniformLocations['uSnapProj[0]'];
+          gl.uniformMatrix4fv(lSnapProj, false, flattenedMatrices);
+        }
+        {
+          const flattenedMatrices = [].concat(...material.uniforms.uSnapProjInv.value.map(c => c.elements));
+          const lSnapProjInv = shader.uniformLocations['uSnapProjInv[0]'];
+          gl.uniformMatrix4fv(lSnapProjInv, false, flattenedMatrices);
+        }
+        {
+          const flattenedMatrices = [].concat(...material.uniforms.uSnapViewInv.value.map(c => c.elements));
+          const lSnapViewInv = shader.uniformLocations['uSnapViewInv[0]'];
+          gl.uniformMatrix4fv(lSnapViewInv, false, flattenedMatrices);
         }
       }
+    }
+
+    this.renderNodes(octree, nodes, visibilityTextureData, camera, target, shader, params);
+
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.activeTexture(gl.TEXTURE0);
+  }
+
+  render(scene, camera, target = null, params = {}) {
+    const gl = this.gl;
+
+    // PREPARE
+    if (target != null) {
+      this.threeRenderer.setRenderTarget(target);
+    }
+
+    camera.updateProjectionMatrix();
+
+    const traversalResult = this.traverse(scene);
+
+
+    // RENDER
+    for (const octree of traversalResult.octrees) {
+      const nodes = octree.visibleNodes;
+      this.renderOctree(octree, nodes, camera, target, params);
+    }
+
+
+    // CLEANUP
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+
+    this.threeRenderer.state.reset();
+  }
+}
+
+     
+
+      
+
 
       // Potree.workerPool = new Potree.WorkerPool();
 
@@ -2917,183 +1391,7 @@ const Potree = {};
       // http://www.kitware.com/source/home/post/9
       // https://tel.archives-ouvertes.fr/tel-00438464/document p. 115+ (french)
 
-      class EyeDomeLightingMaterial extends THREE.ShaderMaterial {
-
-        constructor(parameters = {}) {
-          super();
-
-          let uniforms = {
-            screenWidth: { type: 'f', value: 0 },
-            screenHeight: { type: 'f', value: 0 },
-            edlStrength: { type: 'f', value: 1.0 },
-            radius: { type: 'f', value: 1.0 },
-            neighbours: { type: '2fv', value: [] },
-            depthMap: { type: 't', value: null },
-            //colorMap: 		{ type: 't', 	value: null },
-            uRegularColor: { type: 't', value: null },
-            uRegularDepth: { type: 't', value: null },
-            uEDLColor: { type: 't', value: null },
-            uEDLDepth: { type: 't', value: null },
-            opacity: { type: 'f', value: 1.0 }
-          };
-
-          this.setValues({
-            uniforms: uniforms,
-            vertexShader: this.getDefines() + Shaders['edl.vs'],
-            fragmentShader: this.getDefines() + Shaders['edl.fs'],
-            lights: false
-          });
-
-          this.neighbourCount = 8;
-        }
-
-        getDefines() {
-          let defines = '';
-
-          defines += '#define NEIGHBOUR_COUNT ' + this.neighbourCount + '\n';
-
-          return defines;
-        }
-
-        updateShaderSource() {
-
-          let vs = this.getDefines() + Shaders['edl.vs'];
-          let fs = this.getDefines() + Shaders['edl.fs'];
-
-          this.setValues({
-            vertexShader: vs,
-            fragmentShader: fs
-          });
-
-          this.uniforms.neighbours.value = this.neighbours;
-
-          this.needsUpdate = true;
-        }
-
-        get neighbourCount() {
-          return this._neighbourCount;
-        }
-
-        set neighbourCount(value) {
-          if (this._neighbourCount !== value) {
-            this._neighbourCount = value;
-            this.neighbours = new Float32Array(this._neighbourCount * 2);
-            for (let c = 0; c < this._neighbourCount; c++) {
-              this.neighbours[2 * c + 0] = Math.cos(2 * c * Math.PI / this._neighbourCount);
-              this.neighbours[2 * c + 1] = Math.sin(2 * c * Math.PI / this._neighbourCount);
-            }
-
-            this.updateShaderSource();
-          }
-        }
-
-
-      }
-
-      class NormalizationEDLMaterial extends THREE.RawShaderMaterial {
-
-        constructor(parameters = {}) {
-          super();
-
-          let uniforms = {
-            screenWidth: { type: 'f', value: 0 },
-            screenHeight: { type: 'f', value: 0 },
-            edlStrength: { type: 'f', value: 1.0 },
-            radius: { type: 'f', value: 1.0 },
-            neighbours: { type: '2fv', value: [] },
-            uEDLMap: { type: 't', value: null },
-            uDepthMap: { type: 't', value: null },
-            uWeightMap: { type: 't', value: null },
-          };
-
-          this.setValues({
-            uniforms: uniforms,
-            vertexShader: this.getDefines() + Shaders['normalize.vs'],
-            fragmentShader: this.getDefines() + Shaders['normalize_and_edl.fs'],
-          });
-
-          this.neighbourCount = 8;
-        }
-
-        getDefines() {
-          let defines = '';
-
-          defines += '#define NEIGHBOUR_COUNT ' + this.neighbourCount + '\n';
-
-          return defines;
-        }
-
-        updateShaderSource() {
-
-          let vs = this.getDefines() + Shaders['normalize.vs'];
-          let fs = this.getDefines() + Shaders['normalize_and_edl.fs'];
-
-          this.setValues({
-            vertexShader: vs,
-            fragmentShader: fs
-          });
-
-          this.uniforms.neighbours.value = this.neighbours;
-
-          this.needsUpdate = true;
-        }
-
-        get neighbourCount() {
-          return this._neighbourCount;
-        }
-
-        set neighbourCount(value) {
-          if (this._neighbourCount !== value) {
-            this._neighbourCount = value;
-            this.neighbours = new Float32Array(this._neighbourCount * 2);
-            for (let c = 0; c < this._neighbourCount; c++) {
-              this.neighbours[2 * c + 0] = Math.cos(2 * c * Math.PI / this._neighbourCount);
-              this.neighbours[2 * c + 1] = Math.sin(2 * c * Math.PI / this._neighbourCount);
-            }
-
-            this.updateShaderSource();
-          }
-        }
-
-      }
-
-      class NormalizationMaterial extends THREE.RawShaderMaterial {
-
-        constructor(parameters = {}) {
-          super();
-
-          let uniforms = {
-            uDepthMap: { type: 't', value: null },
-            uWeightMap: { type: 't', value: null },
-          };
-
-          this.setValues({
-            uniforms: uniforms,
-            vertexShader: this.getDefines() + Shaders['normalize.vs'],
-            fragmentShader: this.getDefines() + Shaders['normalize.fs'],
-          });
-        }
-
-        getDefines() {
-          let defines = '';
-
-          return defines;
-        }
-
-        updateShaderSource() {
-
-          let vs = this.getDefines() + Shaders['normalize.vs'];
-          let fs = this.getDefines() + Shaders['normalize.fs'];
-
-          this.setValues({
-            vertexShader: vs,
-            fragmentShader: fs
-          });
-
-          this.needsUpdate = true;
-        }
-
-      }
+   
 
       /**
        * laslaz code taken and adapted from plas.io js-laslaz
@@ -3104,407 +1402,18 @@ const Potree = {};
        *
        */
 
-      class LasLazLoader {
 
-        constructor(version) {
-          if (typeof (version) === 'string') {
-            this.version = new Version(version);
-          } else {
-            this.version = version;
-          }
-        }
 
-        static progressCB() {
 
-        }
 
-        load(node) {
-          if (node.loaded) {
-            return;
-          }
 
-          let pointAttributes = node.pcoGeometry.pointAttributes;
 
-          let url = node.getURL();
 
-          if (this.version.equalOrHigher('1.4')) {
-            url += '.' + pointAttributes.toLowerCase();
-          }
 
-          let xhr = XHRFactory.createXMLHttpRequest();
-          xhr.open('GET', url, true);
-          xhr.responseType = 'arraybuffer';
-          xhr.overrideMimeType('text/plain; charset=x-user-defined');
-          xhr.onreadystatechange = () => {
-            if (xhr.readyState === 4) {
-              if (xhr.status === 200) {
-                let buffer = xhr.response;
-                this.parse(node, buffer);
-              } else {
-                console.log('Failed to load file! HTTP status: ' + xhr.status + ', file: ' + url);
-              }
-            }
-          };
 
-          xhr.send(null);
-        }
 
-        parse(node, buffer) {
-          let lf = new LASFile(buffer);
-          let handler = new LasLazBatcher(node);
 
 
-          //
-          // DEBUG
-          //
-          // invoke the laz decompress worker thousands of times to check for memory leaks
-          // until 2018/03/05, it tended to run out of memory at ~6230 invocations
-          // 
-          //
-          //lf.open()
-          //.then( msg => {
-          //	lf.isOpen = true;
-          //	return lf;
-          //}).catch( msg => {
-          //	console.log("failed to open file. :(");	
-          //}).then( lf => {
-          //	return lf.getHeader().then(function (h) {
-          //		return [lf, h];
-          //	});
-          //}).then( v => {
-          //	let lf = v[0];
-          //	let header = v[1];
-
-          //	lf.readData(1000000, 0, 1)
-          //	.then( v => {
-          //		console.log("read");
-
-          //		this.parse(node, buffer);
-          //	}).then (v => {
-          //		lf.close();	
-          //	});
-
-          //})
-
-
-
-          lf.open()
-            .then(msg => {
-              lf.isOpen = true;
-              return lf;
-            }).catch(msg => {
-              console.log("failed to open file. :(");
-            }).then(lf => {
-              return lf.getHeader().then(function (h) {
-                return [lf, h];
-              });
-            }).then(v => {
-              let lf = v[0];
-              let header = v[1];
-
-              let skip = 1;
-              let totalRead = 0;
-              let totalToRead = (skip <= 1 ? header.pointsCount : header.pointsCount / skip);
-              let reader = function () {
-                let p = lf.readData(1000000, 0, skip);
-                return p.then(function (data) {
-                  handler.push(new LASDecoder(data.buffer,
-                    header.pointsFormatId,
-                    header.pointsStructSize,
-                    data.count,
-                    header.scale,
-                    header.offset,
-                    header.mins, header.maxs));
-
-                  totalRead += data.count;
-                  LasLazLoader.progressCB(totalRead / totalToRead);
-
-                  if (data.hasMoreData) {
-                    return reader();
-                  } else {
-                    header.totalRead = totalRead;
-                    header.versionAsString = lf.versionAsString;
-                    header.isCompressed = lf.isCompressed;
-                    return [lf, header, handler];
-                  }
-                });
-              };
-
-              return reader();
-            }).then(v => {
-              let lf = v[0];
-              // we're done loading this file
-              //
-              LasLazLoader.progressCB(1);
-
-              // Close it
-              return lf.close().then(function () {
-                lf.isOpen = false;
-
-                return v.slice(1);
-              }).catch(e => {
-                // If there was a cancellation, make sure the file is closed, if the file is open
-                // close and then fail
-                if (lf.isOpen) {
-                  return lf.close().then(function () {
-                    lf.isOpen = false;
-                    throw e;
-                  });
-                }
-                throw e;
-              });
-            });
-        }
-
-        handle(node, url) {
-
-        }
-      }
-
-      class LasLazBatcher {
-
-        constructor(node) {
-          this.node = node;
-        }
-
-        push(lasBuffer) {
-          let workerPath = Potree.scriptPath + '/workers/LASDecoderWorker.js';
-          let worker = Potree.workerPool.getWorker(workerPath);
-          let node = this.node;
-
-          worker.onmessage = (e) => {
-            let geometry = new THREE.BufferGeometry();
-            let numPoints = lasBuffer.pointsCount;
-
-            let positions = new Float32Array(e.data.position);
-            let colors = new Uint8Array(e.data.color);
-            let intensities = new Float32Array(e.data.intensity);
-            let classifications = new Uint8Array(e.data.classification);
-            let returnNumbers = new Uint8Array(e.data.returnNumber);
-            let numberOfReturns = new Uint8Array(e.data.numberOfReturns);
-            let pointSourceIDs = new Uint16Array(e.data.pointSourceID);
-            let indices = new Uint8Array(e.data.indices);
-
-            geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
-            geometry.addAttribute('color', new THREE.BufferAttribute(colors, 4, true));
-            geometry.addAttribute('intensity', new THREE.BufferAttribute(intensities, 1));
-            geometry.addAttribute('classification', new THREE.BufferAttribute(classifications, 1));
-            geometry.addAttribute('returnNumber', new THREE.BufferAttribute(returnNumbers, 1));
-            geometry.addAttribute('numberOfReturns', new THREE.BufferAttribute(numberOfReturns, 1));
-            geometry.addAttribute('pointSourceID', new THREE.BufferAttribute(pointSourceIDs, 1));
-            //geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(numPoints * 3), 3));
-            geometry.addAttribute('indices', new THREE.BufferAttribute(indices, 4));
-            geometry.attributes.indices.normalized = true;
-
-            let tightBoundingBox = new THREE.Box3(
-              new THREE.Vector3().fromArray(e.data.tightBoundingBox.min),
-              new THREE.Vector3().fromArray(e.data.tightBoundingBox.max)
-            );
-
-            geometry.boundingBox = this.node.boundingBox;
-            this.node.tightBoundingBox = tightBoundingBox;
-
-            this.node.geometry = geometry;
-            this.node.numPoints = numPoints;
-            this.node.loaded = true;
-            this.node.loading = false;
-            Potree.numNodesLoading--;
-            this.node.mean = new THREE.Vector3(...e.data.mean);
-
-            //debugger;
-
-            Potree.workerPool.returnWorker(workerPath, worker);
-          };
-
-          let message = {
-            buffer: lasBuffer.arrayb,
-            numPoints: lasBuffer.pointsCount,
-            pointSize: lasBuffer.pointSize,
-            pointFormatID: 2,
-            scale: lasBuffer.scale,
-            offset: lasBuffer.offset,
-            mins: lasBuffer.mins,
-            maxs: lasBuffer.maxs
-          };
-          worker.postMessage(message, [message.buffer]);
-        };
-      }
-
-      const PointAttributeNames = {
-        POSITION_CARTESIAN: 0, // float x, y, z;
-        COLOR_PACKED: 1, // byte r, g, b, a; 	I: [0,1]
-        COLOR_FLOATS_1: 2, // float r, g, b; 	I: [0,1]
-        COLOR_FLOATS_255: 3, // float r, g, b; 	I: [0,255]
-        NORMAL_FLOATS: 4, // float x, y, z;
-        FILLER: 5,
-        INTENSITY: 6,
-        CLASSIFICATION: 7,
-        NORMAL_SPHEREMAPPED: 8,
-        NORMAL_OCT16: 9,
-        NORMAL: 10,
-        RETURN_NUMBER: 11,
-        NUMBER_OF_RETURNS: 12,
-        SOURCE_ID: 13,
-        INDICES: 14,
-        SPACING: 15,
-        GPS_TIME: 16,
-      };
-
-
-      /**
-       * Some types of possible point attribute data formats
-       *
-       * @class
-       */
-      const PointAttributeTypes = {
-        DATA_TYPE_DOUBLE: { ordinal: 0, size: 8 },
-        DATA_TYPE_FLOAT: { ordinal: 1, size: 4 },
-        DATA_TYPE_INT8: { ordinal: 2, size: 1 },
-        DATA_TYPE_UINT8: { ordinal: 3, size: 1 },
-        DATA_TYPE_INT16: { ordinal: 4, size: 2 },
-        DATA_TYPE_UINT16: { ordinal: 5, size: 2 },
-        DATA_TYPE_INT32: { ordinal: 6, size: 4 },
-        DATA_TYPE_UINT32: { ordinal: 7, size: 4 },
-        DATA_TYPE_INT64: { ordinal: 8, size: 8 },
-        DATA_TYPE_UINT64: { ordinal: 9, size: 8 }
-      };
-
-      let i = 0;
-      for (let obj in PointAttributeTypes) {
-        PointAttributeTypes[i] = PointAttributeTypes[obj];
-        i++;
-      }
-
-
-      class PointAttribute {
-
-        constructor(name, type, numElements) {
-          this.name = name;
-          this.type = type;
-          this.numElements = numElements;
-          this.byteSize = this.numElements * this.type.size;
-        }
-
-      }
-
-      PointAttribute.POSITION_CARTESIAN = new PointAttribute(
-        PointAttributeNames.POSITION_CARTESIAN,
-        PointAttributeTypes.DATA_TYPE_FLOAT, 3);
-
-      PointAttribute.RGBA_PACKED = new PointAttribute(
-        PointAttributeNames.COLOR_PACKED,
-        PointAttributeTypes.DATA_TYPE_INT8, 4);
-
-      PointAttribute.COLOR_PACKED = PointAttribute.RGBA_PACKED;
-
-      PointAttribute.RGB_PACKED = new PointAttribute(
-        PointAttributeNames.COLOR_PACKED,
-        PointAttributeTypes.DATA_TYPE_INT8, 3);
-
-      PointAttribute.NORMAL_FLOATS = new PointAttribute(
-        PointAttributeNames.NORMAL_FLOATS,
-        PointAttributeTypes.DATA_TYPE_FLOAT, 3);
-
-      PointAttribute.FILLER_1B = new PointAttribute(
-        PointAttributeNames.FILLER,
-        PointAttributeTypes.DATA_TYPE_UINT8, 1);
-
-      PointAttribute.INTENSITY = new PointAttribute(
-        PointAttributeNames.INTENSITY,
-        PointAttributeTypes.DATA_TYPE_UINT16, 1);
-
-      PointAttribute.CLASSIFICATION = new PointAttribute(
-        PointAttributeNames.CLASSIFICATION,
-        PointAttributeTypes.DATA_TYPE_UINT8, 1);
-
-      PointAttribute.NORMAL_SPHEREMAPPED = new PointAttribute(
-        PointAttributeNames.NORMAL_SPHEREMAPPED,
-        PointAttributeTypes.DATA_TYPE_UINT8, 2);
-
-      PointAttribute.NORMAL_OCT16 = new PointAttribute(
-        PointAttributeNames.NORMAL_OCT16,
-        PointAttributeTypes.DATA_TYPE_UINT8, 2);
-
-      PointAttribute.NORMAL = new PointAttribute(
-        PointAttributeNames.NORMAL,
-        PointAttributeTypes.DATA_TYPE_FLOAT, 3);
-
-      PointAttribute.RETURN_NUMBER = new PointAttribute(
-        PointAttributeNames.RETURN_NUMBER,
-        PointAttributeTypes.DATA_TYPE_UINT8, 1);
-
-      PointAttribute.NUMBER_OF_RETURNS = new PointAttribute(
-        PointAttributeNames.NUMBER_OF_RETURNS,
-        PointAttributeTypes.DATA_TYPE_UINT8, 1);
-
-      PointAttribute.SOURCE_ID = new PointAttribute(
-        PointAttributeNames.SOURCE_ID,
-        PointAttributeTypes.DATA_TYPE_UINT16, 1);
-
-      PointAttribute.INDICES = new PointAttribute(
-        PointAttributeNames.INDICES,
-        PointAttributeTypes.DATA_TYPE_UINT32, 1);
-
-      PointAttribute.SPACING = new PointAttribute(
-        PointAttributeNames.SPACING,
-        PointAttributeTypes.DATA_TYPE_FLOAT, 1);
-
-      PointAttribute.GPS_TIME = new PointAttribute(
-        PointAttributeNames.GPS_TIME,
-        PointAttributeTypes.DATA_TYPE_DOUBLE, 1);
-
-      class PointAttributes {
-
-        constructor(pointAttributes) {
-          this.attributes = [];
-          this.byteSize = 0;
-          this.size = 0;
-
-          if (pointAttributes != null) {
-            for (let i = 0; i < pointAttributes.length; i++) {
-              let pointAttributeName = pointAttributes[i];
-              let pointAttribute = PointAttribute[pointAttributeName];
-              this.attributes.push(pointAttribute);
-              this.byteSize += pointAttribute.byteSize;
-              this.size++;
-            }
-          }
-        }
-
-
-        add(pointAttribute) {
-          this.attributes.push(pointAttribute);
-          this.byteSize += pointAttribute.byteSize;
-          this.size++;
-        };
-
-        hasColors() {
-          for (let name in this.attributes) {
-            let pointAttribute = this.attributes[name];
-            if (pointAttribute.name === PointAttributeNames.COLOR_PACKED) {
-              return true;
-            }
-          }
-
-          return false;
-        };
-
-        hasNormals() {
-          for (let name in this.attributes) {
-            let pointAttribute = this.attributes[name];
-            if (
-              pointAttribute === PointAttribute.NORMAL_SPHEREMAPPED ||
-              pointAttribute === PointAttribute.NORMAL_FLOATS ||
-              pointAttribute === PointAttribute.NORMAL ||
-              pointAttribute === PointAttribute.NORMAL_OCT16) {
-              return true;
-            }
-          }
-
-          return false;
-        };
-
-      }
 
       class BinaryLoader {
 
