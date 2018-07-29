@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import * as d3 from 'd3';
+// import * as d3 from 'd3';
+import i18n from 'i18next';
 import jQuery from 'jquery';
 import proj4 from 'proj4';
 import BinaryHeap from './BinaryHeap';
@@ -60,15 +61,15 @@ import WorkerPool from './lib/WorkerPool';
 import EyeDomeLightingMaterial from './lib/EyeDomeLightingMaterial';
 import NormalizationEDLMaterial from './lib/NormalizationEDLMaterial';
 import NormalizationMaterial from './lib/NormalizationMaterial';
-import LasLazLoader from './lib/LasLazLoader';
+// import LasLazLoader from './lib/LasLazLoader';
 import PointAttributeNames from './lib/PointAttributeNames';
 import PointAttributeTypes from './lib/PointAttributeTypes';
 import PointAttribute from './lib/PointAttribute';
 import PointAttributes from './lib/PointAttributes';
-import BinaryLoader from './lib/BinaryLoader';
+// import BinaryLoader from './lib/BinaryLoader';
 import POCLoader from './lib/POCLoader';
 import GreyhoundBinaryLoader from './lib/GreyhoundBinaryLoader';
-import GreyhoundUtils from './lib/GreyhoundUtils';
+// import GreyhoundUtils from './lib/GreyhoundUtils';
 import GreyhoundLoader from './lib/GreyhoundLoader';
 import ClipVolume from './lib/ClipVolume';
 import ClippingTool from './lib/ClippingTool';
@@ -83,27 +84,35 @@ import VolumeTool from './lib/VolumeTool';
 import PotreeRenderer from './lib/PotreeRenderer';
 import EDLRenderer from './lib/EDLRenderer';
 import OrbitControls from './lib/OrbitControls';
-import View from './lib/View';
+import HQSplatRenderer from './lib/HQSplatRenderer';
+import PointCloudArena4D from './lib/PointCloudArena4D';
+import PointCloudArena4DGeometry from './lib/PointCloudArena4DGeometry';
+// import View from './lib/View';
 import Scene from './lib/Scene';
 import MapView from './lib/MapView';
-import CSVExporter from './lib/CSVExporter';
-import LASExporter from './lib/LASExporter';
+// import CSVExporter from './lib/CSVExporter';
+// import LASExporter from './lib/LASExporter';
 import ProfilePointCloudEntry from './lib/ProfilePointCloudEntry';
 import ProfileWindow from './lib/ProfileWindow';
 import ProfileWindowController from './lib/ProfileWindowController';
-import GeoJSONExporter from './lib/GeoJSONExporter';
-import DXFExporter from './lib/DXFExporter';
-import MeasurePanel from './lib/MeasurePanel';
-import DistancePanel from './lib/DistancePanel';
-import PointPanel from './lib/PointPanel';
-import AreaPanel from './lib/AreaPanel';
-import AnglePanel from './lib/AnglePanel';
-import HeightPanel from './lib/HeightPanel';
-import VolumePanel from './lib/VolumePanel';
-import CameraPanel from './lib/CameraPanel';
-import PropertiesPanel from './lib/PropertiesPanel';
+// import GeoJSONExporter from './lib/GeoJSONExporter';
+// import DXFExporter from './lib/DXFExporter';
+// import MeasurePanel from './lib/MeasurePanel';
+// import DistancePanel from './lib/DistancePanel';
+// import PointPanel from './lib/PointPanel';
+// import AreaPanel from './lib/AreaPanel';
+// import AnglePanel from './lib/AnglePanel';
+// import HeightPanel from './lib/HeightPanel';
+// import VolumePanel from './lib/VolumePanel';
+// import CameraPanel from './lib/CameraPanel';
+// import PropertiesPanel from './lib/PropertiesPanel';
 import EarthControls from './lib/EarthControls';
 import FirstPersonControls from './lib/FirstPersonControls';
+import Sidebar from './lib/Sidebar';
+import InputHandler from './lib/InputHandler';
+import NavigationCube from './lib/NavigationCube';
+import DeviceOrientationControls from './lib/DeviceOrientationControls';
+import RepRenderer from './lib/RepRenderer';
 // import BinaryDecoderWorker from './workers/BinaryDecoderWorker';
 // import DEMWorker from './workers/DEMWorker';
 // // import GreyhoundBinaryDecoderWorker from './workers/GreyhoundBinaryDecoderWorker';
@@ -122,13 +131,13 @@ const Potree = {};
     console.log('module are', typeof module);
     console.log('define are', typeof define);
 
-    if (typeof exports === 'object' && typeof module !== 'undefined') {
-      factory(exports);
-    } else if (typeof define === 'function' && define.amd) {
-      define(['exports'], factory);
-    } else {
-      (factory((Potree)));
-    }
+    // if (typeof exports === 'object' && typeof module !== 'undefined') {
+    //   factory(exports);
+    // } else if (typeof define === 'function' && define.amd) {
+    //   define(['exports'], factory);
+    // } else {
+    (factory((Potree)));
+    // }
   }(this, ((exports) => {
     /**
        * @author mrdoob / http://mrdoob.com/ https://github.com/mrdoob/eventdispatcher.js
@@ -337,7 +346,7 @@ const Potree = {};
           }
         }
 
-        const duration = performance.now() - start;
+        // const duration = performance.now() - start;
       }
 
       const result = updateVisibility(pointclouds, camera, renderer);
@@ -420,7 +429,7 @@ const Potree = {};
 
 
     function updateVisibility(pointclouds, camera, renderer) {
-      const numVisibleNodes = 0;
+      // const numVisibleNodes = 0;
       let numVisiblePoints = 0;
 
       const numVisiblePointsInPointclouds = new Map(pointclouds.map(pc => [pc, 0]));
@@ -439,7 +448,7 @@ const Potree = {};
 
       let loadedToGPUThisFrame = 0;
 
-      const domWidth = renderer.domElement.clientWidth;
+      // const domWidth = renderer.domElement.clientWidth;
       const domHeight = renderer.domElement.clientHeight;
 
       // check if pointcloud has been transformed
@@ -517,7 +526,7 @@ const Potree = {};
 
           for (const clipBox of clipBoxes) {
             const pcWorldInverse = new THREE.Matrix4().getInverse(pointcloud.matrixWorld);
-            const toPCObject = pcWorldInverse.multiply(clipBox.box.matrixWorld);
+            // const toPCObject = pcWorldInverse.multiply(clipBox.box.matrixWorld);
 
             const px = new THREE.Vector3(+0.5, 0, 0).applyMatrix4(pcWorldInverse);
             const nx = new THREE.Vector3(-0.5, 0, 0).applyMatrix4(pcWorldInverse);
@@ -1048,7 +1057,7 @@ const Potree = {};
 
         if (material.pointSizeType >= 0) {
           if (material.pointSizeType === PointSizeType.ADAPTIVE ||
-        material.pointColorType === PointColorType.LOD) {
+            material.pointColorType === PointColorType.LOD) {
             const vnNodes = (params.vnTextureNodes != null) ? params.vnTextureNodes : nodes;
             visibilityTextureData = octree.computeVisibilityTextureData(vnNodes, camera);
 
@@ -1439,1824 +1448,6 @@ const Potree = {};
     ProfilePointCloudEntry.materialPool = new Set();
 
 
-
-
-
-
-    /**
-       * @author mschuetz / http://mschuetz.at
-       *
-       * adapted from THREE.OrbitControls by
-       *
-       * @author qiao / https://github.com/qiao
-       * @author mrdoob / http://mrdoob.com
-       * @author alteredq / http://alteredqualia.com/
-       * @author WestLangley / http://github.com/WestLangley
-       * @author erich666 / http://erichaines.com
-       *
-       *
-       *
-       */
-
-
-
-
-    class Sidebar {
-      constructor(viewer) {
-        this.viewer = viewer;
-
-        this.measuringTool = new MeasuringTool(this.viewer);
-        this.profileTool = new ProfileTool(this.viewer);
-        this.volumeTool = new VolumeTool(this.viewer);
-      }
-
-      createToolIcon(icon, title, callback) {
-        const element = $(`
-      <img src="${icon}"
-        style="width: 32px; height: 32px"
-        class="button-icon"
-        data-i18n="${title}" />
-    `);
-
-        element.click(callback);
-
-        return element;
-      }
-
-      init() {
-        this.initAccordion();
-        this.initAppearance();
-        this.initToolbar();
-        this.initScene();
-        this.initNavigation();
-        this.initClassificationList();
-        this.initClippingTool();
-        this.initSettings();
-
-        $('#potree_version_number').html(`${Potree.version.major}.${Potree.version.minor}${Potree.version.suffix}`);
-        $('.perfect_scrollbar').perfectScrollbar();
-      }
-
-
-      initToolbar() {
-        // ANGLE
-        const elToolbar = $('#tools');
-        elToolbar.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/angle.png`,
-          '[title]tt.angle_measurement',
-          () => {
-            $('#menu_measurements').next().slideDown();
-            const measurement = this.measuringTool.startInsertion({
-              showDistances: false,
-              showAngles: true,
-              showArea: false,
-              closed: true,
-              maxMarkers: 3,
-              name: 'Angle',
-            });
-
-            const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-            const jsonNode = measurementsRoot.children.find(child => child.data.uuid === measurement.uuid);
-            $.jstree.reference(jsonNode.id).deselect_all();
-            $.jstree.reference(jsonNode.id).select_node(jsonNode.id);
-          },
-        ));
-
-        // POINT
-        elToolbar.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/point.svg`,
-          '[title]tt.point_measurement',
-          () => {
-            $('#menu_measurements').next().slideDown();
-            const measurement = this.measuringTool.startInsertion({
-              showDistances: false,
-              showAngles: false,
-              showCoordinates: true,
-              showArea: false,
-              closed: true,
-              maxMarkers: 1,
-              name: 'Point',
-            });
-
-            const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-            const jsonNode = measurementsRoot.children.find(child => child.data.uuid === measurement.uuid);
-            $.jstree.reference(jsonNode.id).deselect_all();
-            $.jstree.reference(jsonNode.id).select_node(jsonNode.id);
-          },
-        ));
-
-        // DISTANCE
-        elToolbar.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/distance.svg`,
-          '[title]tt.distance_measurement',
-          () => {
-            $('#menu_measurements').next().slideDown();
-            const measurement = this.measuringTool.startInsertion({
-              showDistances: true,
-              showArea: false,
-              closed: false,
-              name: 'Distance',
-            });
-
-            const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-            const jsonNode = measurementsRoot.children.find(child => child.data.uuid === measurement.uuid);
-            $.jstree.reference(jsonNode.id).deselect_all();
-            $.jstree.reference(jsonNode.id).select_node(jsonNode.id);
-          },
-        ));
-
-        // HEIGHT
-        elToolbar.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/height.svg`,
-          '[title]tt.height_measurement',
-          () => {
-            $('#menu_measurements').next().slideDown();
-            const measurement = this.measuringTool.startInsertion({
-              showDistances: false,
-              showHeight: true,
-              showArea: false,
-              closed: false,
-              maxMarkers: 2,
-              name: 'Height',
-            });
-
-            const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-            const jsonNode = measurementsRoot.children.find(child => child.data.uuid === measurement.uuid);
-            $.jstree.reference(jsonNode.id).deselect_all();
-            $.jstree.reference(jsonNode.id).select_node(jsonNode.id);
-          },
-        ));
-
-        // AREA
-        elToolbar.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/area.svg`,
-          '[title]tt.area_measurement',
-          () => {
-            $('#menu_measurements').next().slideDown();
-            const measurement = this.measuringTool.startInsertion({
-              showDistances: true,
-              showArea: true,
-              closed: true,
-              name: 'Area',
-            });
-
-            const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-            const jsonNode = measurementsRoot.children.find(child => child.data.uuid === measurement.uuid);
-            $.jstree.reference(jsonNode.id).deselect_all();
-            $.jstree.reference(jsonNode.id).select_node(jsonNode.id);
-          },
-        ));
-
-        // VOLUME
-        elToolbar.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/volume.svg`,
-          '[title]tt.volume_measurement',
-          () => {
-            const volume = this.volumeTool.startInsertion();
-
-            const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-            const jsonNode = measurementsRoot.children.find(child => child.data.uuid === volume.uuid);
-            $.jstree.reference(jsonNode.id).deselect_all();
-            $.jstree.reference(jsonNode.id).select_node(jsonNode.id);
-          },
-        ));
-
-        // SPHERE VOLUME
-        elToolbar.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/sphere_distances.svg`,
-          '[title]tt.volume_measurement',
-          () => {
-            const volume = this.volumeTool.startInsertion({ type: SphereVolume });
-
-            const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-            const jsonNode = measurementsRoot.children.find(child => child.data.uuid === volume.uuid);
-            $.jstree.reference(jsonNode.id).deselect_all();
-            $.jstree.reference(jsonNode.id).select_node(jsonNode.id);
-          },
-        ));
-
-        // PROFILE
-        elToolbar.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/profile.svg`,
-          '[title]tt.height_profile',
-          () => {
-            $('#menu_measurements').next().slideDown();
-            const profile = this.profileTool.startInsertion();
-
-            const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-            const jsonNode = measurementsRoot.children.find(child => child.data.uuid === profile.uuid);
-            $.jstree.reference(jsonNode.id).deselect_all();
-            $.jstree.reference(jsonNode.id).select_node(jsonNode.id);
-          },
-        ));
-
-        // REMOVE ALL
-        elToolbar.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/reset_tools.svg`,
-          '[title]tt.remove_all_measurement',
-          () => {
-            this.viewer.scene.removeAllMeasurements();
-          },
-        ));
-      }
-
-      initScene() {
-        const elScene = $('#menu_scene');
-        const elObjects = elScene.next().find('#scene_objects');
-        const elProperties = elScene.next().find('#scene_object_properties');
-
-
-        {
-          const elExport = elScene.next().find('#scene_export');
-
-          const geoJSONIcon = `${Potree.resourcePath}/icons/file_geojson.svg`;
-          const dxfIcon = `${Potree.resourcePath}/icons/file_dxf.svg`;
-
-          elExport.append(`
-        Export: <br>
-        <a href="#" download="measure.json"><img name="geojson_export_button" src="${geoJSONIcon}" class="button-icon" style="height: 24px" /></a>
-        <a href="#" download="measure.dxf"><img name="dxf_export_button" src="${dxfIcon}" class="button-icon" style="height: 24px" /></a>
-      `);
-
-          const elDownloadJSON = elExport.find('img[name=geojson_export_button]').parent();
-          elDownloadJSON.click(() => {
-            const scene = this.viewer.scene;
-            const measurements = [...scene.measurements, ...scene.profiles, ...scene.volumes];
-
-            const geoJson = GeoJSONExporter.toString(measurements);
-
-            const url = window.URL.createObjectURL(new Blob([geoJson], { type: 'data:application/octet-stream' }));
-            elDownloadJSON.attr('href', url);
-          });
-
-          const elDownloadDXF = elExport.find('img[name=dxf_export_button]').parent();
-          elDownloadDXF.click(() => {
-            const scene = this.viewer.scene;
-            const measurements = [...scene.measurements, ...scene.profiles, ...scene.volumes];
-
-            const dxf = DXFExporter.toString(measurements);
-
-            const url = window.URL.createObjectURL(new Blob([dxf], { type: 'data:application/octet-stream' }));
-            elDownloadDXF.attr('href', url);
-          });
-        }
-
-        const propertiesPanel = new PropertiesPanel(elProperties, this.viewer);
-        propertiesPanel.setScene(this.viewer.scene);
-
-        localStorage.removeItem('jstree');
-
-        const tree = $('<div id="jstree_scene"></div>');
-        elObjects.append(tree);
-
-        tree.jstree({
-          plugins: ['checkbox', 'state'],
-          core: {
-            dblclick_toggle: false,
-            state: {
-              checked: true,
-            },
-            check_callback: true,
-            expand_selected_onload: true,
-          },
-          checkbox: {
-            keep_selected_style: true,
-            three_state: false,
-            whole_node: false,
-            tie_selection: false,
-          },
-        });
-
-        const createNode = (parent, text, icon, object) => {
-          const nodeID = tree.jstree('create_node', parent, {
-            text,
-            icon,
-            data: object,
-          },
-          'last', false, false);
-
-          if (object.visible) {
-            tree.jstree('check_node', nodeID);
-          } else {
-            tree.jstree('uncheck_node', nodeID);
-          }
-
-          return nodeID;
-        };
-
-        const pcID = tree.jstree('create_node', '#', { text: '<b>Point Clouds</b>', id: 'pointclouds' }, 'last', false, false);
-        const measurementID = tree.jstree('create_node', '#', { text: '<b>Measurements</b>', id: 'measurements' }, 'last', false, false);
-        const annotationsID = tree.jstree('create_node', '#', { text: '<b>Annotations</b>', id: 'annotations' }, 'last', false, false);
-        const otherID = tree.jstree('create_node', '#', { text: '<b>Other</b>', id: 'other' }, 'last', false, false);
-
-        tree.jstree('check_node', pcID);
-        tree.jstree('check_node', measurementID);
-        tree.jstree('check_node', annotationsID);
-        tree.jstree('check_node', otherID);
-
-        tree.on('create_node.jstree', (e, data) => {
-          tree.jstree('open_all');
-        });
-
-        tree.on('select_node.jstree', (e, data) => {
-          const object = data.node.data;
-          propertiesPanel.set(object);
-
-          this.viewer.inputHandler.deselectAll();
-
-          if (object instanceof Volume) {
-            this.viewer.inputHandler.toggleSelection(object);
-          }
-
-          $(this.viewer.renderer.domElement).focus();
-        });
-
-        tree.on('deselect_node.jstree', (e, data) => {
-          propertiesPanel.set(null);
-        });
-
-        tree.on('delete_node.jstree', (e, data) => {
-          propertiesPanel.set(null);
-        });
-
-        tree.on('dblclick', '.jstree-anchor', (e) => {
-          const instance = $.jstree.reference(this);
-          const node = instance.get_node(this);
-          const object = node.data;
-
-          // ignore double click on checkbox
-          if (e.target.classList.contains('jstree-checkbox')) {
-            return;
-          }
-
-          if (object instanceof PointCloudTree) {
-            const box = this.viewer.getBoundingBox([object]);
-            const node = new THREE.Object3D();
-            node.boundingBox = box;
-            this.viewer.zoomTo(node, 1, 500);
-          } else if (object instanceof Measure) {
-            const points = object.points.map(p => p.position);
-            const box = new THREE.Box3().setFromPoints(points);
-            if (box.getSize(new THREE.Vector3()).length() > 0) {
-              const node = new THREE.Object3D();
-              node.boundingBox = box;
-              this.viewer.zoomTo(node, 2, 500);
-            }
-          } else if (object instanceof Profile) {
-            const points = object.points;
-            const box = new THREE.Box3().setFromPoints(points);
-            if (box.getSize(new THREE.Vector3()).length() > 0) {
-              const node = new THREE.Object3D();
-              node.boundingBox = box;
-              this.viewer.zoomTo(node, 1, 500);
-            }
-          } else if (object instanceof Volume) {
-            const box = object.boundingBox.clone().applyMatrix4(object.matrixWorld);
-
-            if (box.getSize(new THREE.Vector3()).length() > 0) {
-              const node = new THREE.Object3D();
-              node.boundingBox = box;
-              this.viewer.zoomTo(node, 1, 500);
-            }
-          } else if (object instanceof Annotation) {
-            object.moveHere(this.viewer.scene.getActiveCamera());
-          } else if (object instanceof PolygonClipVolume) {
-            const dir = object.camera.getWorldDirection(new THREE.Vector3());
-            let target;
-
-            if (object.camera instanceof THREE.OrthographicCamera) {
-              dir.multiplyScalar(object.camera.right);
-              target = new THREE.Vector3().addVectors(object.camera.position, dir);
-              this.viewer.setCameraMode(CameraMode.ORTHOGRAPHIC);
-            } else if (object.camera instanceof THREE.PerspectiveCamera) {
-              dir.multiplyScalar(this.viewer.scene.view.radius);
-              target = new THREE.Vector3().addVectors(object.camera.position, dir);
-              this.viewer.setCameraMode(CameraMode.PERSPECTIVE);
-            }
-
-            this.viewer.scene.view.position.copy(object.camera.position);
-            this.viewer.scene.view.lookAt(target);
-          } else if (object instanceof THREE.SpotLight) {
-            const distance = (object.distance > 0) ? object.distance / 4 : 5 * 1000;
-            const position = object.position;
-            const target = new THREE.Vector3().addVectors(
-              position,
-              object.getWorldDirection(new THREE.Vector3()).multiplyScalar(distance));
-
-            this.viewer.scene.view.position.copy(object.position);
-            this.viewer.scene.view.lookAt(target);
-          } else if (object instanceof THREE.Object3D) {
-            const box = new THREE.Box3().setFromObject(object);
-
-            if (box.getSize(new THREE.Vector3()).length() > 0) {
-              const node = new THREE.Object3D();
-              node.boundingBox = box;
-              this.viewer.zoomTo(node, 1, 500);
-            }
-          }
-        });
-
-        tree.on('uncheck_node.jstree', (e, data) => {
-          const object = data.node.data;
-
-          if (object) {
-            object.visible = false;
-          }
-        });
-
-        tree.on('check_node.jstree', (e, data) => {
-          const object = data.node.data;
-
-          if (object) {
-            object.visible = true;
-          }
-        });
-
-
-        const onPointCloudAdded = (e) => {
-          const pointcloud = e.pointcloud;
-          const cloudIcon = `${Potree.resourcePath}/icons/cloud.svg`;
-          const node = createNode(pcID, pointcloud.name, cloudIcon, pointcloud);
-
-          pointcloud.addEventListener('visibility_changed', () => {
-            if (pointcloud.visible) {
-              tree.jstree('check_node', node);
-            } else {
-              tree.jstree('uncheck_node', node);
-            }
-          });
-        };
-
-        const onMeasurementAdded = (e) => {
-          const measurement = e.measurement;
-          const icon = Utils.getMeasurementIcon(measurement);
-          createNode(measurementID, measurement.name, icon, measurement);
-        };
-
-        const onVolumeAdded = (e) => {
-          const volume = e.volume;
-          const icon = Utils.getMeasurementIcon(volume);
-          const node = createNode(measurementID, volume.name, icon, volume);
-
-          volume.addEventListener('visibility_changed', () => {
-            if (volume.visible) {
-              tree.jstree('check_node', node);
-            } else {
-              tree.jstree('uncheck_node', node);
-            }
-          });
-        };
-
-        const onProfileAdded = (e) => {
-          const profile = e.profile;
-          const icon = Utils.getMeasurementIcon(profile);
-          createNode(measurementID, profile.name, icon, profile);
-        };
-
-        const onAnnotationAdded = (e) => {
-          const annotation = e.annotation;
-
-          const annotationIcon = `${Potree.resourcePath}/icons/annotation.svg`;
-          const parentID = this.annotationMapping.get(annotation.parent);
-          const annotationID = createNode(parentID, annotation.title, annotationIcon, annotation);
-          this.annotationMapping.set(annotation, annotationID);
-
-          // let node = createNode(annotationsID, annotation.name, icon, volume);
-          // oldScene.annotations.removeEventListener('annotation_added', this.onAnnotationAdded);
-        };
-
-        this.viewer.scene.addEventListener('pointcloud_added', onPointCloudAdded);
-        this.viewer.scene.addEventListener('measurement_added', onMeasurementAdded);
-        this.viewer.scene.addEventListener('profile_added', onProfileAdded);
-        this.viewer.scene.addEventListener('volume_added', onVolumeAdded);
-        this.viewer.scene.addEventListener('polygon_clip_volume_added', onVolumeAdded);
-        this.viewer.scene.annotations.addEventListener('annotation_added', onAnnotationAdded);
-
-        const onMeasurementRemoved = (e) => {
-          const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-          const jsonNode = measurementsRoot.children.find(child => child.data.uuid === e.measurement.uuid);
-
-          tree.jstree('delete_node', jsonNode.id);
-        };
-
-        const onVolumeRemoved = (e) => {
-          const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-          const jsonNode = measurementsRoot.children.find(child => child.data.uuid === e.volume.uuid);
-
-          tree.jstree('delete_node', jsonNode.id);
-        };
-
-        const onProfileRemoved = (e) => {
-          const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-          const jsonNode = measurementsRoot.children.find(child => child.data.uuid === e.profile.uuid);
-
-          tree.jstree('delete_node', jsonNode.id);
-        };
-
-        this.viewer.scene.addEventListener('measurement_removed', onMeasurementRemoved);
-        this.viewer.scene.addEventListener('volume_removed', onVolumeRemoved);
-        this.viewer.scene.addEventListener('profile_removed', onProfileRemoved);
-
-        {
-          const annotationIcon = `${Potree.resourcePath}/icons/annotation.svg`;
-          this.annotationMapping = new Map();
-          this.annotationMapping.set(this.viewer.scene.annotations, annotationsID);
-          this.viewer.scene.annotations.traverseDescendants((annotation) => {
-            const parentID = this.annotationMapping.get(annotation.parent);
-            const annotationID = createNode(parentID, annotation.title, annotationIcon, annotation);
-            this.annotationMapping.set(annotation, annotationID);
-          });
-        }
-
-        for (const pointcloud of this.viewer.scene.pointclouds) {
-          onPointCloudAdded({ pointcloud });
-        }
-
-        for (const measurement of this.viewer.scene.measurements) {
-          onMeasurementAdded({ measurement });
-        }
-
-        for (const volume of [...this.viewer.scene.volumes, ...this.viewer.scene.polygonClipVolumes]) {
-          onVolumeAdded({ volume });
-        }
-
-
-        for (const profile of this.viewer.scene.profiles) {
-          onProfileAdded({ profile });
-        }
-
-        {
-          createNode(otherID, 'Camera', null, new THREE.Camera());
-        }
-
-        this.viewer.addEventListener('scene_changed', (e) => {
-          propertiesPanel.setScene(e.scene);
-
-          e.oldScene.removeEventListener('pointcloud_added', onPointCloudAdded);
-          e.oldScene.removeEventListener('measurement_added', onMeasurementAdded);
-          e.oldScene.removeEventListener('profile_added', onProfileAdded);
-          e.oldScene.removeEventListener('volume_added', onVolumeAdded);
-          e.oldScene.removeEventListener('polygon_clip_volume_added', onVolumeAdded);
-          e.oldScene.removeEventListener('measurement_removed', onMeasurementRemoved);
-
-          e.scene.addEventListener('pointcloud_added', onPointCloudAdded);
-          e.scene.addEventListener('measurement_added', onMeasurementAdded);
-          e.scene.addEventListener('profile_added', onProfileAdded);
-          e.scene.addEventListener('volume_added', onVolumeAdded);
-          e.scene.addEventListener('polygon_clip_volume_added', onVolumeAdded);
-          e.scene.addEventListener('measurement_removed', onMeasurementRemoved);
-        });
-      }
-
-      initClippingTool() {
-        this.viewer.addEventListener('cliptask_changed', (event) => {
-          console.log('TODO');
-        });
-
-        this.viewer.addEventListener('clipmethod_changed', (event) => {
-          console.log('TODO');
-        });
-
-        {
-          const elClipTask = $('#cliptask_options');
-          elClipTask.selectgroup({ title: 'Clip Task' });
-
-          elClipTask.find('input').click((e) => {
-            this.viewer.setClipTask(ClipTask[e.target.value]);
-          });
-
-          const currentClipTask = Object.keys(ClipTask)
-            .filter(key => ClipTask[key] === this.viewer.clipTask);
-          elClipTask.find(`input[value=${currentClipTask}]`).trigger('click');
-        }
-
-        {
-          const elClipMethod = $('#clipmethod_options');
-          elClipMethod.selectgroup({ title: 'Clip Method' });
-
-          elClipMethod.find('input').click((e) => {
-            this.viewer.setClipMethod(ClipMethod[e.target.value]);
-          });
-
-          const currentClipMethod = Object.keys(ClipMethod)
-            .filter(key => ClipMethod[key] === this.viewer.clipMethod);
-          elClipMethod.find(`input[value=${currentClipMethod}]`).trigger('click');
-        }
-
-        const clippingToolBar = $('#clipping_tools');
-
-        // CLIP VOLUME
-        clippingToolBar.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/clip_volume.svg`,
-          '[title]tt.clip_volume',
-          () => {
-            const item = this.volumeTool.startInsertion({ clip: true });
-
-            const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-            const jsonNode = measurementsRoot.children.find(child => child.data.uuid === item.uuid);
-            $.jstree.reference(jsonNode.id).deselect_all();
-            $.jstree.reference(jsonNode.id).select_node(jsonNode.id);
-          },
-        ));
-
-        // CLIP POLYGON
-        clippingToolBar.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/clip-polygon.svg`,
-          '[title]tt.clip_polygon',
-          () => {
-            const item = this.viewer.clippingTool.startInsertion({ type: 'polygon' });
-
-            const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-            const jsonNode = measurementsRoot.children.find(child => child.data.uuid === item.uuid);
-            $.jstree.reference(jsonNode.id).deselect_all();
-            $.jstree.reference(jsonNode.id).select_node(jsonNode.id);
-          },
-        ));
-
-        { // SCREEN BOX SELECT
-          const boxSelectTool = new ScreenBoxSelectTool(this.viewer);
-
-          clippingToolBar.append(this.createToolIcon(
-            `${Potree.resourcePath}/icons/clip-screen.svg`,
-            '[title]tt.screen_clip_box',
-            () => {
-              if (!(this.viewer.scene.getActiveCamera() instanceof THREE.OrthographicCamera)) {
-                this.viewer.postMessage('Switch to Orthographic Camera Mode before using the Screen-Box-Select tool.',
-                  { duration: 2000 });
-                return;
-              }
-
-              const item = boxSelectTool.startInsertion();
-
-              const measurementsRoot = $('#jstree_scene').jstree().get_json('measurements');
-              const jsonNode = measurementsRoot.children.find(child => child.data.uuid === item.uuid);
-              $.jstree.reference(jsonNode.id).deselect_all();
-              $.jstree.reference(jsonNode.id).select_node(jsonNode.id);
-            },
-          ));
-        }
-
-        { // REMOVE CLIPPING TOOLS
-          clippingToolBar.append(this.createToolIcon(
-            `${Potree.resourcePath}/icons/remove.svg`,
-            '[title]tt.remove_all_measurement',
-            () => {
-              this.viewer.scene.removeAllClipVolumes();
-            },
-          ));
-        }
-      }
-
-      initClassificationList() {
-        const elClassificationList = $('#classificationList');
-
-        const addClassificationItem = (code, name) => {
-          const inputID = `chkClassification_${code}`;
-
-          const element = $(`
-        <li>
-          <label style="whitespace: nowrap">
-            <input id="${inputID}" type="checkbox" checked/>
-            <span>${name}</span>
-          </label>
-        </li>
-      `);
-
-          const elInput = element.find('input');
-
-          elInput.click((event) => {
-            this.viewer.setClassificationVisibility(code, event.target.checked);
-          });
-
-          elClassificationList.append(element);
-        };
-
-        addClassificationItem(0, 'never classified');
-        addClassificationItem(1, 'unclassified');
-        addClassificationItem(2, 'ground');
-        addClassificationItem(3, 'low vegetation');
-        addClassificationItem(4, 'medium vegetation');
-        addClassificationItem(5, 'high vegetation');
-        addClassificationItem(6, 'building');
-        addClassificationItem(7, 'low point(noise)');
-        addClassificationItem(8, 'key-point');
-        addClassificationItem(9, 'water');
-        addClassificationItem(12, 'overlap');
-      }
-
-      initAccordion() {
-        $('.accordion > h3').each(function () {
-          const header = $(this);
-          const content = $(this).next();
-
-          // header.addClass('accordion-header ui-widget');
-          // content.addClass('accordion-content ui-widget');
-
-          content.hide();
-
-          header.click(() => {
-            content.slideToggle();
-          });
-        });
-
-        const languages = [
-          ['EN', 'en'],
-          ['FR', 'fr'],
-          ['DE', 'de'],
-          ['JP', 'jp'],
-        ];
-
-        const elLanguages = $('#potree_languages');
-        for (let i = 0; i < languages.length; i++) {
-          const [key, value] = languages[i];
-          const element = $(`<a>${key}</a>`);
-          element.click(() => this.viewer.setLanguage(value));
-
-          if (i === 0) {
-            element.css('margin-left', '30px');
-          }
-
-          elLanguages.append(element);
-
-          if (i < languages.length - 1) {
-            elLanguages.append($(document.createTextNode(' - ')));
-          }
-        }
-
-
-        // to close all, call
-        // $(".accordion > div").hide()
-
-        // to open the, for example, tool menu, call:
-        // $("#menu_tools").next().show()
-      }
-
-      initAppearance() {
-        $('#sldPointBudget').slider({
-          value: this.viewer.getPointBudget(),
-          min: 100 * 1000,
-          max: 10 * 1000 * 1000,
-          step: 1000,
-          slide: (event, ui) => { this.viewer.setPointBudget(ui.value); },
-        });
-
-        $('#sldFOV').slider({
-          value: this.viewer.getFOV(),
-          min: 20,
-          max: 100,
-          step: 1,
-          slide: (event, ui) => { this.viewer.setFOV(ui.value); },
-        });
-
-        $('#sldEDLRadius').slider({
-          value: this.viewer.getEDLRadius(),
-          min: 1,
-          max: 4,
-          step: 0.01,
-          slide: (event, ui) => { this.viewer.setEDLRadius(ui.value); },
-        });
-
-        $('#sldEDLStrength').slider({
-          value: this.viewer.getEDLStrength(),
-          min: 0,
-          max: 5,
-          step: 0.01,
-          slide: (event, ui) => { this.viewer.setEDLStrength(ui.value); },
-        });
-
-        this.viewer.addEventListener('point_budget_changed', (event) => {
-          $('#lblPointBudget')[0].innerHTML = Utils.addCommas(this.viewer.getPointBudget());
-          $('#sldPointBudget').slider({ value: this.viewer.getPointBudget() });
-        });
-
-        this.viewer.addEventListener('fov_changed', (event) => {
-          $('#lblFOV')[0].innerHTML = parseInt(this.viewer.getFOV());
-          $('#sldFOV').slider({ value: this.viewer.getFOV() });
-        });
-
-        this.viewer.addEventListener('edl_radius_changed', (event) => {
-          $('#lblEDLRadius')[0].innerHTML = this.viewer.getEDLRadius().toFixed(1);
-          $('#sldEDLRadius').slider({ value: this.viewer.getEDLRadius() });
-        });
-
-        this.viewer.addEventListener('edl_strength_changed', (event) => {
-          $('#lblEDLStrength')[0].innerHTML = this.viewer.getEDLStrength().toFixed(1);
-          $('#sldEDLStrength').slider({ value: this.viewer.getEDLStrength() });
-        });
-
-        this.viewer.addEventListener('background_changed', (event) => {
-          $(`input[name=background][value='${this.viewer.getBackground()}']`).prop('checked', true);
-        });
-
-        $('#lblPointBudget')[0].innerHTML = Utils.addCommas(this.viewer.getPointBudget());
-        $('#lblFOV')[0].innerHTML = parseInt(this.viewer.getFOV());
-        $('#lblEDLRadius')[0].innerHTML = this.viewer.getEDLRadius().toFixed(1);
-        $('#lblEDLStrength')[0].innerHTML = this.viewer.getEDLStrength().toFixed(1);
-        $('#chkEDLEnabled')[0].checked = this.viewer.getEDLEnabled();
-
-        {
-          const elBackground = $('#background_options');
-          elBackground.selectgroup();
-
-          elBackground.find('input').click((e) => {
-            this.viewer.setBackground(e.target.value);
-          });
-
-          const currentBackground = this.viewer.getBackground();
-          $(`input[name=background_options][value=${currentBackground}]`).trigger('click');
-        }
-
-        $('#chkEDLEnabled').click(() => {
-          this.viewer.setEDLEnabled($('#chkEDLEnabled').prop('checked'));
-        });
-      }
-
-      initNavigation() {
-        const elNavigation = $('#navigation');
-        const sldMoveSpeed = $('#sldMoveSpeed');
-        const lblMoveSpeed = $('#lblMoveSpeed');
-
-        elNavigation.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/earth_controls_1.png`,
-          '[title]tt.earth_control',
-          () => { this.viewer.setNavigationMode(EarthControls); },
-        ));
-
-        elNavigation.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/fps_controls.svg`,
-          '[title]tt.flight_control',
-          () => {
-            this.viewer.setNavigationMode(FirstPersonControls);
-            this.viewer.fpControls.lockElevation = false;
-          },
-        ));
-
-        elNavigation.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/helicopter_controls.svg`,
-          '[title]tt.heli_control',
-          () => {
-            this.viewer.setNavigationMode(FirstPersonControls);
-            this.viewer.fpControls.lockElevation = true;
-          },
-        ));
-
-        elNavigation.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/orbit_controls.svg`,
-          '[title]tt.orbit_control',
-          () => { this.viewer.setNavigationMode(OrbitControls); },
-        ));
-
-        elNavigation.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/focus.svg`,
-          '[title]tt.focus_control',
-          () => { this.viewer.fitToScreen(); },
-        ));
-
-
-        elNavigation.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/navigation_cube.svg`,
-          '[title]tt.navigation_cube_control',
-          () => { this.viewer.toggleNavigationCube(); },
-        ));
-
-        elNavigation.append('<br>');
-
-
-        elNavigation.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/left.svg`,
-          '[title]tt.left_view_control',
-          () => { this.viewer.setLeftView(); },
-        ));
-
-        elNavigation.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/right.svg`,
-          '[title]tt.right_view_control',
-          () => { this.viewer.setRightView(); },
-        ));
-
-        elNavigation.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/front.svg`,
-          '[title]tt.front_view_control',
-          () => { this.viewer.setFrontView(); },
-        ));
-
-        elNavigation.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/back.svg`,
-          '[title]tt.back_view_control',
-          () => { this.viewer.setBackView(); },
-        ));
-
-        elNavigation.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/top.svg`,
-          '[title]tt.top_view_control',
-          () => { this.viewer.setTopView(); },
-        ));
-
-        elNavigation.append(this.createToolIcon(
-          `${Potree.resourcePath}/icons/bottom.svg`,
-          '[title]tt.bottom_view_control',
-          () => { this.viewer.setBottomView(); },
-        ));
-
-
-        const elCameraProjection = $(`
-      <selectgroup id="camera_projection_options">
-        <option id="camera_projection_options_perspective" value="PERSPECTIVE">Perspective</option>
-        <option id="camera_projection_options_orthigraphic" value="ORTHOGRAPHIC">Orthographic</option>
-      </selectgroup>
-    `);
-        elNavigation.append(elCameraProjection);
-        elCameraProjection.selectgroup({ title: 'Camera Projection' });
-        elCameraProjection.find('input').click((e) => {
-          this.viewer.setCameraMode(CameraMode[e.target.value]);
-        });
-        const cameraMode = Object.keys(CameraMode)
-          .filter(key => CameraMode[key] === this.viewer.scene.cameraMode);
-        elCameraProjection.find(`input[value=${cameraMode}]`).trigger('click');
-
-        const speedRange = new THREE.Vector2(1, 10 * 1000);
-
-        const toLinearSpeed = value => Math.pow(value, 4) * speedRange.y + speedRange.x;
-
-        const toExpSpeed = value => Math.pow((value - speedRange.x) / speedRange.y, 1 / 4);
-
-        sldMoveSpeed.slider({
-          value: toExpSpeed(this.viewer.getMoveSpeed()),
-          min: 0,
-          max: 1,
-          step: 0.01,
-          slide: (event, ui) => { this.viewer.setMoveSpeed(toLinearSpeed(ui.value)); },
-        });
-
-        this.viewer.addEventListener('move_speed_changed', (event) => {
-          lblMoveSpeed.html(this.viewer.getMoveSpeed().toFixed(1));
-          sldMoveSpeed.slider({ value: toExpSpeed(this.viewer.getMoveSpeed()) });
-        });
-
-        lblMoveSpeed.html(this.viewer.getMoveSpeed().toFixed(1));
-      }
-
-
-      initSettings() {
-        {
-          $('#sldMinNodeSize').slider({
-            value: this.viewer.getMinNodeSize(),
-            min: 0,
-            max: 1000,
-            step: 0.01,
-            slide: (event, ui) => { this.viewer.setMinNodeSize(ui.value); },
-          });
-
-          this.viewer.addEventListener('minnodesize_changed', (event) => {
-            $('#lblMinNodeSize').html(parseInt(this.viewer.getMinNodeSize()));
-            $('#sldMinNodeSize').slider({ value: this.viewer.getMinNodeSize() });
-          });
-          $('#lblMinNodeSize').html(parseInt(this.viewer.getMinNodeSize()));
-        }
-
-        {
-          const elSplatQuality = $('#splat_quality_options');
-          elSplatQuality.selectgroup({ title: 'Splat Quality' });
-
-          elSplatQuality.find('input').click((e) => {
-            if (e.target.value === 'standard') {
-              this.viewer.useHQ = false;
-            } else if (e.target.value === 'hq') {
-              this.viewer.useHQ = true;
-            }
-          });
-
-          const currentQuality = this.viewer.useHQ ? 'hq' : 'standard';
-          elSplatQuality.find(`input[value=${currentQuality}]`).trigger('click');
-        }
-
-        $('#show_bounding_box').click(() => {
-          this.viewer.setShowBoundingBox($('#show_bounding_box').prop('checked'));
-        });
-
-        $('#set_freeze').click(() => {
-          this.viewer.setFreeze($('#set_freeze').prop('checked'));
-        });
-      }
-    }
-
-    /**
-       * @author mschuetz / http://mschuetz.at
-       *
-       *
-       */
-
-    class InputHandler extends EventDispatcher {
-      constructor(viewer) {
-        super();
-
-        this.viewer = viewer;
-        this.renderer = viewer.renderer;
-        this.domElement = this.renderer.domElement;
-        this.enabled = true;
-
-        this.scene = null;
-        this.interactiveScenes = [];
-        this.interactiveObjects = new Set();
-        this.inputListeners = [];
-        this.blacklist = new Set();
-
-        this.drag = null;
-        this.mouse = new THREE.Vector2(0, 0);
-
-        this.selection = [];
-
-        this.hoveredElements = [];
-        this.pressedKeys = {};
-
-        this.wheelDelta = 0;
-
-        this.speed = 1;
-
-        this.logMessages = false;
-
-        if (this.domElement.tabIndex === -1) {
-          this.domElement.tabIndex = 2222;
-        }
-
-        this.domElement.addEventListener('contextmenu', (event) => { event.preventDefault(); }, false);
-        this.domElement.addEventListener('click', this.onMouseClick.bind(this), false);
-        this.domElement.addEventListener('mousedown', this.onMouseDown.bind(this), false);
-        this.domElement.addEventListener('mouseup', this.onMouseUp.bind(this), false);
-        this.domElement.addEventListener('mousemove', this.onMouseMove.bind(this), false);
-        this.domElement.addEventListener('mousewheel', this.onMouseWheel.bind(this), false);
-        this.domElement.addEventListener('DOMMouseScroll', this.onMouseWheel.bind(this), false); // Firefox
-        this.domElement.addEventListener('dblclick', this.onDoubleClick.bind(this));
-        this.domElement.addEventListener('keydown', this.onKeyDown.bind(this));
-        this.domElement.addEventListener('keyup', this.onKeyUp.bind(this));
-        this.domElement.addEventListener('touchstart', this.onTouchStart.bind(this));
-        this.domElement.addEventListener('touchend', this.onTouchEnd.bind(this));
-        this.domElement.addEventListener('touchmove', this.onTouchMove.bind(this));
-      }
-
-      addInputListener(listener) {
-        this.inputListeners.push(listener);
-      }
-
-      removeInputListener(listener) {
-        this.inputListeners = this.inputListeners.filter(e => e !== listener);
-      }
-
-      getSortedListeners() {
-        return this.inputListeners.sort((a, b) => {
-          const ia = (a.importance !== undefined) ? a.importance : 0;
-          const ib = (b.importance !== undefined) ? b.importance : 0;
-
-          return ib - ia;
-        });
-      }
-
-      onTouchStart(e) {
-        if (this.logMessages) console.log(`${this.constructor.name}: onTouchStart`);
-
-        e.preventDefault();
-
-        if (e.touches.length === 1) {
-          const rect = this.domElement.getBoundingClientRect();
-          const x = e.touches[0].pageX - rect.left;
-          const y = e.touches[0].pageY - rect.top;
-          this.mouse.set(x, y);
-
-          this.startDragging(null);
-        }
-
-
-        for (const inputListener of this.getSortedListeners()) {
-          inputListener.dispatchEvent({
-            type: e.type,
-            touches: e.touches,
-            changedTouches: e.changedTouches,
-          });
-        }
-      }
-
-      onTouchEnd(e) {
-        if (this.logMessages) console.log(`${this.constructor.name}: onTouchEnd`);
-
-        e.preventDefault();
-
-        for (const inputListener of this.getSortedListeners()) {
-          inputListener.dispatchEvent({
-            type: 'drop',
-            drag: this.drag,
-            viewer: this.viewer,
-          });
-        }
-
-        this.drag = null;
-
-        for (const inputListener of this.getSortedListeners()) {
-          inputListener.dispatchEvent({
-            type: e.type,
-            touches: e.touches,
-            changedTouches: e.changedTouches,
-          });
-        }
-      }
-
-      onTouchMove(e) {
-        if (this.logMessages) console.log(`${this.constructor.name}: onTouchMove`);
-
-        e.preventDefault();
-
-        if (e.touches.length === 1) {
-          const rect = this.domElement.getBoundingClientRect();
-          const x = e.touches[0].pageX - rect.left;
-          const y = e.touches[0].pageY - rect.top;
-          this.mouse.set(x, y);
-
-          if (this.drag) {
-            this.drag.mouse = 1;
-
-            this.drag.lastDrag.x = x - this.drag.end.x;
-            this.drag.lastDrag.y = y - this.drag.end.y;
-
-            this.drag.end.set(x, y);
-
-            if (this.logMessages) console.log(`${this.constructor.name}: drag: `);
-            for (const inputListener of this.getSortedListeners()) {
-              inputListener.dispatchEvent({
-                type: 'drag',
-                drag: this.drag,
-                viewer: this.viewer,
-              });
-            }
-          }
-        }
-
-        for (const inputListener of this.getSortedListeners()) {
-          inputListener.dispatchEvent({
-            type: e.type,
-            touches: e.touches,
-            changedTouches: e.changedTouches,
-          });
-        }
-
-        // DEBUG CODE
-        // let debugTouches = [...e.touches, {
-        //	pageX: this.domElement.clientWidth / 2,
-        //	pageY: this.domElement.clientHeight / 2}];
-        // for(let inputListener of this.getSortedListeners()){
-        //	inputListener.dispatchEvent({
-        //		type: e.type,
-        //		touches: debugTouches,
-        //		changedTouches: e.changedTouches
-        //	});
-        // }
-      }
-
-      onKeyDown(e) {
-        if (this.logMessages) console.log(`${this.constructor.name}: onKeyDown`);
-
-        // DELETE
-        if (e.keyCode === KeyCodes.DELETE && this.selection.length > 0) {
-          this.dispatchEvent({
-            type: 'delete',
-            selection: this.selection,
-          });
-
-          this.deselectAll();
-        }
-
-        this.dispatchEvent({
-          type: 'keydown',
-          keyCode: e.keyCode,
-          event: e,
-        });
-
-        // for(let l of this.getSortedListeners()){
-        //	l.dispatchEvent({
-        //		type: "keydown",
-        //		keyCode: e.keyCode,
-        //		event: e
-        //	});
-        // }
-
-        this.pressedKeys[e.keyCode] = true;
-
-        // e.preventDefault();
-      }
-
-      onKeyUp(e) {
-        if (this.logMessages) console.log(`${this.constructor.name}: onKeyUp`);
-
-        delete this.pressedKeys[e.keyCode];
-
-        e.preventDefault();
-      }
-
-      onDoubleClick(e) {
-        if (this.logMessages) console.log(`${this.constructor.name}: onDoubleClick`);
-
-        let consumed = false;
-        for (const hovered of this.hoveredElements) {
-          if (hovered._listeners && hovered._listeners.dblclick) {
-            hovered.object.dispatchEvent({
-              type: 'dblclick',
-              mouse: this.mouse,
-              object: hovered.object,
-            });
-            consumed = true;
-            break;
-          }
-        }
-
-        if (!consumed) {
-          for (const inputListener of this.getSortedListeners()) {
-            inputListener.dispatchEvent({
-              type: 'dblclick',
-              mouse: this.mouse,
-              object: null,
-            });
-          }
-        }
-
-        e.preventDefault();
-      }
-
-      onMouseClick(e) {
-        if (this.logMessages) console.log(`${this.constructor.name}: onMouseClick`);
-
-        e.preventDefault();
-      }
-
-      onMouseDown(e) {
-        if (this.logMessages) console.log(`${this.constructor.name}: onMouseDown`);
-
-        e.preventDefault();
-
-        let consumed = false;
-        const consume = () => consumed = true;
-        if (this.hoveredElements.length === 0) {
-          for (const inputListener of this.getSortedListeners()) {
-            inputListener.dispatchEvent({
-              type: 'mousedown',
-              viewer: this.viewer,
-              mouse: this.mouse,
-            });
-          }
-        } else {
-          for (const hovered of this.hoveredElements) {
-            const object = hovered.object;
-            object.dispatchEvent({
-              type: 'mousedown',
-              viewer: this.viewer,
-              consume,
-            });
-
-            if (consumed) {
-              break;
-            }
-          }
-        }
-
-        if (!this.drag) {
-          const target = this.hoveredElements
-            .find(el => (
-              el.object._listeners &&
-                el.object._listeners.drag &&
-                el.object._listeners.drag.length > 0));
-
-          if (target) {
-            this.startDragging(target.object, { location: target.point });
-          } else {
-            this.startDragging(null);
-          }
-        }
-
-        if (this.scene) {
-          this.viewStart = this.scene.view.clone();
-        }
-      }
-
-      onMouseUp(e) {
-        if (this.logMessages) console.log(`${this.constructor.name}: onMouseUp`);
-
-        e.preventDefault();
-
-        const noMovement = this.getNormalizedDrag().length() === 0;
-
-
-        let consumed = false;
-        const consume = () => consumed = true;
-        if (this.hoveredElements.length === 0) {
-          for (const inputListener of this.getSortedListeners()) {
-            inputListener.dispatchEvent({
-              type: 'mouseup',
-              viewer: this.viewer,
-              mouse: this.mouse,
-              consume,
-            });
-
-            if (consumed) {
-              break;
-            }
-          }
-        } else {
-          const hovered = this.hoveredElements
-            .map(e => e.object)
-            .find(e => (e._listeners && e._listeners.mouseup));
-          if (hovered) {
-            hovered.dispatchEvent({
-              type: 'mouseup',
-              viewer: this.viewer,
-              consume,
-            });
-          }
-        }
-
-        if (this.drag) {
-          if (this.drag.object) {
-            if (this.logMessages) console.log(`${this.constructor.name}: drop ${this.drag.object.name}`);
-            this.drag.object.dispatchEvent({
-              type: 'drop',
-              drag: this.drag,
-              viewer: this.viewer,
-
-            });
-          } else {
-            for (const inputListener of this.getSortedListeners()) {
-              inputListener.dispatchEvent({
-                type: 'drop',
-                drag: this.drag,
-                viewer: this.viewer,
-              });
-            }
-          }
-
-          // check for a click
-          const clicked = this.hoveredElements.map(h => h.object).find(v => v === this.drag.object) !== undefined;
-          if (clicked) {
-            if (this.logMessages) console.log(`${this.constructor.name}: click ${this.drag.object.name}`);
-            this.drag.object.dispatchEvent({
-              type: 'click',
-              viewer: this.viewer,
-              consume,
-            });
-          }
-
-          this.drag = null;
-        }
-
-        if (!consumed) {
-          if (e.button === THREE.MOUSE.LEFT) {
-            if (noMovement) {
-              let selectable = this.hoveredElements
-                .find(el => el.object._listeners && el.object._listeners.select);
-
-              if (selectable) {
-                selectable = selectable.object;
-
-                if (this.isSelected(selectable)) {
-                  this.selection
-                    .filter(e => e !== selectable)
-                    .forEach(e => this.toggleSelection(e));
-                } else {
-                  this.deselectAll();
-                  this.toggleSelection(selectable);
-                }
-              } else {
-                this.deselectAll();
-              }
-            }
-          } else if ((e.button === THREE.MOUSE.RIGHT) && noMovement) {
-            this.deselectAll();
-          }
-        }
-      }
-
-      onMouseMove(e) {
-        e.preventDefault();
-
-        const rect = this.domElement.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        this.mouse.set(x, y);
-
-        const hoveredElements = this.getHoveredElements();
-        if (hoveredElements.length > 0) {
-          const names = hoveredElements.map(h => h.object.name).join(', ');
-          if (this.logMessages) console.log(`${this.constructor.name}: onMouseMove; hovered: '${names}'`);
-        }
-
-        if (this.drag) {
-          this.drag.mouse = e.buttons;
-
-          this.drag.lastDrag.x = x - this.drag.end.x;
-          this.drag.lastDrag.y = y - this.drag.end.y;
-
-          this.drag.end.set(x, y);
-
-          if (this.drag.object) {
-            if (this.logMessages) console.log(`${this.constructor.name}: drag: ${this.drag.object.name}`);
-            this.drag.object.dispatchEvent({
-              type: 'drag',
-              drag: this.drag,
-              viewer: this.viewer,
-            });
-          } else {
-            if (this.logMessages) console.log(`${this.constructor.name}: drag: `);
-
-            let dragConsumed = false;
-            for (const inputListener of this.getSortedListeners()) {
-              inputListener.dispatchEvent({
-                type: 'drag',
-                drag: this.drag,
-                viewer: this.viewer,
-                consume: () => { dragConsumed = true; },
-              });
-
-              if (dragConsumed) {
-                break;
-              }
-            }
-          }
-        } else {
-          const curr = hoveredElements.map(a => a.object).find(a => true);
-          const prev = this.hoveredElements.map(a => a.object).find(a => true);
-
-          if (curr !== prev) {
-            if (curr) {
-              if (this.logMessages) console.log(`${this.constructor.name}: mouseover: ${curr.name}`);
-              curr.dispatchEvent({
-                type: 'mouseover',
-                object: curr,
-              });
-            }
-            if (prev) {
-              if (this.logMessages) console.log(`${this.constructor.name}: mouseleave: ${prev.name}`);
-              prev.dispatchEvent({
-                type: 'mouseleave',
-                object: prev,
-              });
-            }
-          }
-
-          if (hoveredElements.length > 0) {
-            const object = hoveredElements
-              .map(e => e.object)
-              .find(e => (e._listeners && e._listeners.mousemove));
-
-            if (object) {
-              object.dispatchEvent({
-                type: 'mousemove',
-                object,
-              });
-            }
-          }
-        }
-
-
-        this.hoveredElements = hoveredElements;
-      }
-
-      onMouseWheel(e) {
-        if (!this.enabled) return;
-
-        if (this.logMessages) console.log(`${this.constructor.name}: onMouseWheel`);
-
-        e.preventDefault();
-
-        let delta = 0;
-        if (e.wheelDelta !== undefined) { // WebKit / Opera / Explorer 9
-          delta = e.wheelDelta;
-        } else if (e.detail !== undefined) { // Firefox
-          delta = -e.detail;
-        }
-
-        const ndelta = Math.sign(delta);
-
-        // this.wheelDelta += Math.sign(delta);
-
-        if (this.hoveredElement) {
-          this.hoveredElement.object.dispatchEvent({
-            type: 'mousewheel',
-            delta: ndelta,
-            object: this.hoveredElement.object,
-          });
-        } else {
-          for (const inputListener of this.getSortedListeners()) {
-            inputListener.dispatchEvent({
-              type: 'mousewheel',
-              delta: ndelta,
-              object: null,
-            });
-          }
-        }
-      }
-
-      startDragging(object, args = null) {
-        const name = object ? object.name : 'no name';
-        if (this.logMessages) console.log(`${this.constructor.name}: startDragging: '${name}'`);
-
-        this.drag = {
-          start: this.mouse.clone(),
-          end: this.mouse.clone(),
-          lastDrag: new THREE.Vector2(0, 0),
-          startView: this.scene.view.clone(),
-          object,
-        };
-
-        if (args) {
-          for (const key of Object.keys(args)) {
-            this.drag[key] = args[key];
-          }
-        }
-      }
-
-      getMousePointCloudIntersection(mouse) {
-        return Utils.getMousePointCloudIntersection(
-          this.mouse,
-          this.scene.getActiveCamera(),
-          this.viewer,
-          this.scene.pointclouds);
-      }
-
-      toggleSelection(object) {
-        const oldSelection = this.selection;
-
-        const index = this.selection.indexOf(object);
-
-        if (index === -1) {
-          this.selection.push(object);
-          object.dispatchEvent({
-            type: 'select',
-          });
-        } else {
-          this.selection.splice(index, 1);
-          object.dispatchEvent({
-            type: 'deselect',
-          });
-        }
-
-        this.dispatchEvent({
-          type: 'selection_changed',
-          oldSelection,
-          selection: this.selection,
-        });
-      }
-
-      deselect(object) {
-        const oldSelection = this.selection;
-
-        const index = this.selection.indexOf(object);
-
-        if (index >= 0) {
-          this.selection.splice(index, 1);
-          object.dispatchEvent({
-            type: 'deselect',
-          });
-
-          this.dispatchEvent({
-            type: 'selection_changed',
-            oldSelection,
-            selection: this.selection,
-          });
-        }
-      }
-
-      deselectAll() {
-        for (const object of this.selection) {
-          object.dispatchEvent({
-            type: 'deselect',
-          });
-        }
-
-        const oldSelection = this.selection;
-
-        if (this.selection.length > 0) {
-          this.selection = [];
-          this.dispatchEvent({
-            type: 'selection_changed',
-            oldSelection,
-            selection: this.selection,
-          });
-        }
-      }
-
-      isSelected(object) {
-        const index = this.selection.indexOf(object);
-
-        return index !== -1;
-      }
-
-      registerInteractiveObject(object) {
-        this.interactiveObjects.add(object);
-      }
-
-      removeInteractiveObject(object) {
-        this.interactiveObjects.delete(object);
-      }
-
-      registerInteractiveScene(scene) {
-        const index = this.interactiveScenes.indexOf(scene);
-        if (index === -1) {
-          this.interactiveScenes.push(scene);
-        }
-      }
-
-      unregisterInteractiveScene(scene) {
-        const index = this.interactiveScenes.indexOf(scene);
-        if (index > -1) {
-          this.interactiveScenes.splice(index, 1);
-        }
-      }
-
-      getHoveredElement() {
-        const hoveredElements = this.getHoveredElements();
-        if (hoveredElements.length > 0) {
-          return hoveredElements[0];
-        }
-        return null;
-      }
-
-      getHoveredElements() {
-        const scenes = this.interactiveScenes.concat(this.scene.scene);
-
-        const interactableListeners = ['mouseup', 'mousemove', 'mouseover', 'mouseleave', 'drag', 'drop', 'click', 'select', 'deselect'];
-        const interactables = [];
-        for (const scene of scenes) {
-          scene.traverseVisible((node) => {
-            if (node._listeners && node.visible && !this.blacklist.has(node)) {
-              const hasInteractableListener = interactableListeners.filter(e => node._listeners[e] !== undefined).length > 0;
-
-              if (hasInteractableListener) {
-                interactables.push(node);
-              }
-            }
-          });
-        }
-
-        const camera = this.scene.getActiveCamera();
-        const ray = Utils.mouseToRay(this.mouse, camera, this.domElement.clientWidth, this.domElement.clientHeight);
-
-        const raycaster = new THREE.Raycaster();
-        raycaster.ray.set(ray.origin, ray.direction);
-        raycaster.linePrecision = 0.2;
-
-        const intersections = raycaster.intersectObjects(interactables.filter(o => o.visible), false);
-
-        return intersections;
-
-        // if(intersections.length > 0){
-        //	return intersections[0];
-        // }else{
-        //	return null;
-        // }
-      }
-
-      setScene(scene) {
-        this.deselectAll();
-
-        this.scene = scene;
-      }
-
-      update(delta) {
-
-      }
-
-      getNormalizedDrag() {
-        if (!this.drag) {
-          return new THREE.Vector2(0, 0);
-        }
-
-        const diff = new THREE.Vector2().subVectors(this.drag.end, this.drag.start);
-
-        diff.x /= this.domElement.clientWidth;
-        diff.y /= this.domElement.clientHeight;
-
-        return diff;
-      }
-
-      getNormalizedLastDrag() {
-        if (!this.drag) {
-          return new THREE.Vector2(0, 0);
-        }
-
-        const lastDrag = this.drag.lastDrag.clone();
-
-        lastDrag.x /= this.domElement.clientWidth;
-        lastDrag.y /= this.domElement.clientHeight;
-
-        return lastDrag;
-      }
-    }
-
-    class NavigationCube extends THREE.Object3D {
-      constructor(viewer) {
-        super();
-
-        this.viewer = viewer;
-
-        const createPlaneMaterial = (img) => {
-          const material = new THREE.MeshBasicMaterial({
-            depthTest: true,
-            depthWrite: true,
-            side: THREE.DoubleSide,
-          });
-          new THREE.TextureLoader().load(
-            `${exports.resourcePath}/textures/navigation/${img}`,
-            (texture) => {
-              texture.anisotropy = viewer.renderer.capabilities.getMaxAnisotropy();
-              material.map = texture;
-              material.needsUpdate = true;
-            });
-          return material;
-        };
-
-        const planeGeometry = new THREE.PlaneGeometry(1, 1);
-
-        this.front = new THREE.Mesh(planeGeometry, createPlaneMaterial('F.png'));
-        this.front.position.y = -0.5;
-        this.front.rotation.x = Math.PI / 2.0;
-        this.front.updateMatrixWorld();
-        this.front.name = 'F';
-        this.add(this.front);
-
-        this.back = new THREE.Mesh(planeGeometry, createPlaneMaterial('B.png'));
-        this.back.position.y = 0.5;
-        this.back.rotation.x = Math.PI / 2.0;
-        this.back.updateMatrixWorld();
-        this.back.name = 'B';
-        this.add(this.back);
-
-        this.left = new THREE.Mesh(planeGeometry, createPlaneMaterial('L.png'));
-        this.left.position.x = -0.5;
-        this.left.rotation.y = Math.PI / 2.0;
-        this.left.updateMatrixWorld();
-        this.left.name = 'L';
-        this.add(this.left);
-
-        this.right = new THREE.Mesh(planeGeometry, createPlaneMaterial('R.png'));
-        this.right.position.x = 0.5;
-        this.right.rotation.y = Math.PI / 2.0;
-        this.right.updateMatrixWorld();
-        this.right.name = 'R';
-        this.add(this.right);
-
-        this.bottom = new THREE.Mesh(planeGeometry, createPlaneMaterial('D.png'));
-        this.bottom.position.z = -0.5;
-        this.bottom.updateMatrixWorld();
-        this.bottom.name = 'D';
-        this.add(this.bottom);
-
-        this.top = new THREE.Mesh(planeGeometry, createPlaneMaterial('U.png'));
-        this.top.position.z = 0.5;
-        this.top.updateMatrixWorld();
-        this.top.name = 'U';
-        this.add(this.top);
-
-        this.width = 150; // in px
-
-        this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
-        this.camera.position.copy(new THREE.Vector3(0, 0, 0));
-        this.camera.lookAt(new THREE.Vector3(0, 1, 0));
-        this.camera.updateMatrixWorld();
-        this.camera.rotation.order = 'ZXY';
-
-        const onMouseDown = (event) => {
-          this.pickedFace = null;
-          const mouse = new THREE.Vector2();
-          mouse.x = event.clientX - (window.innerWidth - this.width);
-          mouse.y = event.clientY;
-
-          if (mouse.x < 0 || mouse.y > this.width) return;
-
-          mouse.x = (mouse.x / this.width) * 2 - 1;
-          mouse.y = -(mouse.y / this.width) * 2 + 1;
-
-          const raycaster = new THREE.Raycaster();
-          raycaster.setFromCamera(mouse, this.camera);
-          raycaster.ray.origin.sub(this.camera.getWorldDirection(new THREE.Vector3()));
-
-          const intersects = raycaster.intersectObjects(this.children);
-
-          let minDistance = 1000;
-          for (let i = 0; i < intersects.length; i++) {
-            if (intersects[i].distance < minDistance) {
-              this.pickedFace = intersects[i].object.name;
-              minDistance = intersects[i].distance;
-            }
-          }
-          if (this.pickedFace) {
-            this.viewer.setView(this.pickedFace);
-          }
-        };
-
-        this.viewer.renderer.domElement.addEventListener('mousedown', onMouseDown, false);
-      }
-
-      update(rotation) {
-        this.camera.rotation.copy(rotation);
-        this.camera.updateMatrixWorld();
-      }
-    }
-
     /**
        * @author chrisl / Geodan
        *
@@ -3273,67 +1464,6 @@ const Potree = {};
        *
        */
 
-    class DeviceOrientationControls extends EventDispatcher {
-      constructor(viewer) {
-        super();
-
-        this.viewer = viewer;
-        this.renderer = viewer.renderer;
-
-        this.scene = null;
-        this.sceneControls = new THREE.Scene();
-
-        this.screenOrientation = window.orientation || 0;
-
-        const deviceOrientationChange = (e) => {
-          this.deviceOrientation = e;
-        };
-
-        const screenOrientationChange = (e) => {
-          this.screenOrientation = window.orientation || 0;
-        };
-
-        if ('ondeviceorientationabsolute' in window) {
-          window.addEventListener('deviceorientationabsolute', deviceOrientationChange);
-        } else if ('ondeviceorientation' in window) {
-          window.addEventListener('deviceorientation', deviceOrientationChange);
-        } else {
-          console.warn('No device orientation found.');
-        }
-        // window.addEventListener('deviceorientation', deviceOrientationChange);
-        window.addEventListener('orientationchange', screenOrientationChange);
-      }
-
-      setScene(scene) {
-        this.scene = scene;
-      }
-
-      update(delta) {
-        const computeQuaternion = function (alpha, beta, gamma, orient) {
-          const quaternion = new THREE.Quaternion();
-
-          const zee = new THREE.Vector3(0, 0, 1);
-          const euler = new THREE.Euler();
-          const q0 = new THREE.Quaternion();
-
-          euler.set(beta, gamma, alpha, 'ZXY');
-          quaternion.setFromEuler(euler);
-          quaternion.multiply(q0.setFromAxisAngle(zee, -orient));
-
-          return quaternion;
-        };
-
-        if (typeof this.deviceOrientation !== 'undefined') {
-          const alpha = this.deviceOrientation.alpha ? THREE.Math.degToRad(this.deviceOrientation.alpha) : 0;
-          const beta = this.deviceOrientation.beta ? THREE.Math.degToRad(this.deviceOrientation.beta) : 0;
-          const gamma = this.deviceOrientation.gamma ? THREE.Math.degToRad(this.deviceOrientation.gamma) : 0;
-          const orient = this.screenOrientation ? THREE.Math.degToRad(this.screenOrientation) : 0;
-
-          const quaternion = computeQuaternion(alpha, beta, gamma, orient);
-          viewer.scene.cameraP.quaternion.set(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
-        }
-      }
-    }
 
     class Viewer extends EventDispatcher {
       constructor(domElement, args = {}) {
@@ -3468,7 +1598,7 @@ const Potree = {};
           {
             const near = 2.5;
             const far = 10.0;
-            const fov = 90;
+            // const fov = 90;
 
             this.shadowTestCam = new THREE.PerspectiveCamera(90, 1, near, far);
             this.shadowTestCam.position.set(3.50, -2.80, 8.561);
@@ -3876,6 +2006,7 @@ const Potree = {};
           case 'in':
             this.lengthUnit = this.LENGTH_UNITS.INCH;
             break;
+          default:
         }
 
         this.dispatchEvent({ type: 'length_unit_changed', viewer: this, value });
@@ -3907,8 +2038,8 @@ const Potree = {};
         const endPosition = camera.position.clone();
         const startTarget = view.getPivot();
         const endTarget = bs.center;
-        const startRadius = view.radius;
-        const endRadius = endPosition.distanceTo(endTarget);
+        // const startRadius = view.radius;
+        // const endRadius = endPosition.distanceTo(endTarget);
 
         const easing = TWEEN.Easing.Quartic.Out;
 
@@ -3987,6 +2118,7 @@ const Potree = {};
           case 'D':
             this.setBottomView();
             break;
+          default:
         }
       }
 
@@ -4043,7 +2175,7 @@ const Potree = {};
         this.scene.cameraMode = mode;
 
         for (const pointcloud of this.scene.pointclouds) {
-          pointcloud.material.useOrthographicCamera = mode == CameraMode.ORTHOGRAPHIC;
+          pointcloud.material.useOrthographicCamera = mode === CameraMode.ORTHOGRAPHIC;
         }
       }
 
@@ -4239,7 +2371,7 @@ const Potree = {};
           // imgMapToggle.src = new URL(Potree.resourcePath + '/icons/map_icon.png').href;
           imgMapToggle.src = `${Potree.resourcePath}/icons/map_icon.png`;
           imgMapToggle.style.display = 'none';
-          imgMapToggle.onclick = (e) => { this.toggleMap(); };
+          imgMapToggle.onclick = () => { this.toggleMap(); };
           imgMapToggle.id = 'potree_map_toggle';
 
           viewer.renderArea.insertBefore(imgMapToggle, viewer.renderArea.children[0]);
@@ -4254,7 +2386,7 @@ const Potree = {};
             preload: ['en', 'fr', 'de', 'jp'],
             getAsync: true,
             debug: false,
-          }, (t) => {
+          }, () => {
             // Start translation once everything is loaded
             $('body').i18n();
           });
@@ -4338,7 +2470,7 @@ const Potree = {};
         this.scene.cameraP.updateMatrixWorld();
         this.scene.cameraO.updateMatrixWorld();
 
-        const distances = [];
+        // const distances = [];
 
         const renderAreaWidth = this.renderer.getSize().width;
         const renderAreaHeight = this.renderer.getSize().height;
@@ -4379,7 +2511,7 @@ const Potree = {};
 
 
             // SCREEN SIZE
-            if (viewer.scene.cameraMode == CameraMode.PERSPECTIVE) {
+            if (viewer.scene.cameraMode === CameraMode.PERSPECTIVE) {
               const fov = Math.PI * viewer.scene.cameraP.fov / 180;
               const slope = Math.tan(fov / 2.0);
               const projFactor = 0.5 * renderAreaHeight / (slope * distance);
@@ -4626,7 +2758,7 @@ const Potree = {};
             // don't change near and far in this case
           }
 
-          if (this.scene.cameraMode == CameraMode.ORTHOGRAPHIC) {
+          if (this.scene.cameraMode === CameraMode.ORTHOGRAPHIC) {
             camera.near = -camera.far;
           }
         }
@@ -4757,7 +2889,7 @@ const Potree = {};
         { // resize
           const width = this.scaleFactor * this.renderArea.clientWidth;
           const height = this.scaleFactor * this.renderArea.clientHeight;
-          const pixelRatio = this.renderer.getPixelRatio();
+          // const pixelRatio = this.renderer.getPixelRatio();
           const aspect = width / height;
 
           this.scene.cameraP.aspect = aspect;
@@ -4903,10 +3035,10 @@ const Potree = {};
             const csam = 6;
 
             let message = ` ${'NAME'.padEnd(cn)} |`
-                + ` ${'MIN'.padStart(cmin)} |`
-                + ` ${'MEDIAN'.padStart(cmed)} |`
-                + ` ${'MAX'.padStart(cmax)} |`
-                + ` ${'SAMPLES'.padStart(csam)} \n`;
+              + ` ${'MIN'.padStart(cmin)} |`
+              + ` ${'MEDIAN'.padStart(cmed)} |`
+              + ` ${'MAX'.padStart(cmax)} |`
+              + ` ${'SAMPLES'.padStart(csam)} \n`;
             message += ` ${'-'.repeat(message.length)}\n`;
 
             names = Array.from(names).sort();
@@ -4918,10 +3050,10 @@ const Potree = {};
               const n = group.n;
 
               message += ` ${name.padEnd(cn)} |`
-                  + ` ${min.padStart(cmin)} |`
-                  + ` ${median.padStart(cmed)} |`
-                  + ` ${max.padStart(cmax)} |`
-                  + ` ${n.toString().padStart(csam)}\n`;
+                + ` ${min.padStart(cmin)} |`
+                + ` ${median.padStart(cmed)} |`
+                + ` ${max.padStart(cmax)} |`
+                + ` ${n.toString().padStart(csam)}\n`;
             }
             message += '\n';
             console.log(message);
@@ -5108,7 +3240,7 @@ const Potree = {};
         callback({ type: 'pointcloud_loaded', pointcloud });
       };
 
-        // load pointcloud
+      // load pointcloud
       if (!path) {
         // TODO: callback? comment? Hello? Bueller? Anyone?
       } else if (path.indexOf('greyhound://') === 0) {

@@ -9,7 +9,7 @@ import PointCloudArena4DNode from './PointCloudArena4DNode';
 import PointColorType from './PointColorType';
 import ClipTask from './ClipTask';
 
-export default class PointCloudArena4D$1 extends PointCloudTree {
+export default class PointCloudArena4D extends PointCloudTree {
   constructor(geometry) {
     super();
 
