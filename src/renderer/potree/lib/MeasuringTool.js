@@ -12,7 +12,7 @@ export default class MeasuringTool extends EventDispatcher {
     this.viewer = viewer;
     this.renderer = viewer.renderer;
 
-    this.addEventListener('start_inserting_measurement', (e) => {
+    this.addEventListener('start_inserting_measurement', () => {
       this.viewer.dispatchEvent({
         type: 'cancel_insertions',
       });
@@ -91,7 +91,7 @@ export default class MeasuringTool extends EventDispatcher {
       }
     };
 
-    cancel.callback = (e) => {
+    cancel.callback = () => {
       if (cancel.removeLastMarker) {
         measure.removeMarker(measure.points.length - 1);
       }
