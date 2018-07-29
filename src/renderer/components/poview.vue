@@ -26,11 +26,7 @@ export default {
   },
   methods: {
     initViewer() {
-      {
-			// open links in the standard browser instead of electron
-			// see https://github.com/electron/electron/issues/1344
-	
-		}
+
   //  {
 	// 		// open links in the standard browser instead of electron
 	// 		// see https://github.com/electron/electron/issues/1344
@@ -588,10 +584,6 @@ body{
 .button-icon:hover{
 	/*background-color:	#09181C;*/
 	filter:				drop-shadow(0px 0px 4px white);
-}
-
-.ui-widget-content{
-	/*color: var(--font-color) !important;*/
 }
 
 .accordion > h3{
