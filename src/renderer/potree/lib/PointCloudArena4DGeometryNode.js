@@ -87,15 +87,15 @@ export default class PointCloudArena4DGeometryNode {
       const numPoints = buffer.byteLength / 17;
       const bytesPerPoint = 28;
 
-      const data = new ArrayBuffer(numPoints * bytesPerPoint);
-      const targetView = new DataView(data);
+      // const data = new ArrayBuffer(numPoints * bytesPerPoint);
+      // const targetView = new DataView(data);
 
-      const attributes = [
-        Potree.PointAttribute.POSITION_CARTESIAN,
-        Potree.PointAttribute.RGBA_PACKED,
-        Potree.PointAttribute.INTENSITY,
-        Potree.PointAttribute.CLASSIFICATION,
-      ];
+      // const attributes = [
+      //   Potree.PointAttribute.POSITION_CARTESIAN,
+      //   Potree.PointAttribute.RGBA_PACKED,
+      //   Potree.PointAttribute.INTENSITY,
+      //   Potree.PointAttribute.CLASSIFICATION,
+      // ];
 
 
       const position = new Float32Array(numPoints * 3);

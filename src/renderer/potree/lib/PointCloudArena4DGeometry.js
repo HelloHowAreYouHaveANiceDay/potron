@@ -12,6 +12,7 @@ export default class PointCloudArena4DGeometry extends EventDispatcher {
     this.numPoints = 0;
     this.version = 0;
     this.boundingBox = null;
+
     this.numNodes = 0;
     this.name = null;
     this.provider = null;
@@ -86,7 +87,7 @@ export default class PointCloudArena4DGeometry extends EventDispatcher {
       }
 
       const buffer = xhr.response;
-      const numNodes = buffer.byteLength /	3;
+      const numNodes = buffer.byteLength / 3;
       const view = new DataView(buffer);
       const stack = [];
       let root = null;
