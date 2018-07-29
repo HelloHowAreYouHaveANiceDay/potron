@@ -8,7 +8,7 @@ const Gradients = {
     [3 / 6, new THREE.Color(0, 1, 0)],
     [4 / 6, new THREE.Color(1, 1, 0)],
     [5 / 6, new THREE.Color(1, 0.64, 0)],
-    [1, new THREE.Color(1, 0, 0)]
+    [1, new THREE.Color(1, 0, 0)],
   ],
   // From chroma spectral http://gka.github.io/chroma.js/
   SPECTRAL: [
@@ -22,7 +22,7 @@ const Gradients = {
     [0.7, new THREE.Color(0.9922, 0.6824, 0.3804)],
     [0.8, new THREE.Color(0.9569, 0.4275, 0.2627)],
     [0.9, new THREE.Color(0.8353, 0.2431, 0.3098)],
-    [1, new THREE.Color(0.6196, 0.0039, 0.2588)]
+    [1, new THREE.Color(0.6196, 0.0039, 0.2588)],
   ],
   PLASMA: [
     [0.0, new THREE.Color(0.241, 0.015, 0.610)],
@@ -35,7 +35,7 @@ const Gradients = {
     [0.7, new THREE.Color(0.963, 0.554, 0.272)],
     [0.8, new THREE.Color(0.992, 0.681, 0.195)],
     [0.9, new THREE.Color(0.987, 0.822, 0.144)],
-    [1.0, new THREE.Color(0.940, 0.975, 0.131)]
+    [1.0, new THREE.Color(0.940, 0.975, 0.131)],
   ],
   YELLOW_GREEN: [
     [0, new THREE.Color(0.1647, 0.2824, 0.3451)],
@@ -48,7 +48,7 @@ const Gradients = {
     [0.7, new THREE.Color(0.4453, 0.8099, 0.5201)],
     [0.8, new THREE.Color(0.6102, 0.8748, 0.4850)],
     [0.9, new THREE.Color(0.7883, 0.9323, 0.4514)],
-    [1, new THREE.Color(0.9804, 0.9804, 0.4314)]
+    [1, new THREE.Color(0.9804, 0.9804, 0.4314)],
   ],
   VIRIDIS: [
     [0.0, new THREE.Color(0.267, 0.005, 0.329)],
@@ -61,7 +61,7 @@ const Gradients = {
     [0.7, new THREE.Color(0.267, 0.749, 0.441)],
     [0.8, new THREE.Color(0.478, 0.821, 0.318)],
     [0.9, new THREE.Color(0.741, 0.873, 0.150)],
-    [1.0, new THREE.Color(0.993, 0.906, 0.144)]
+    [1.0, new THREE.Color(0.993, 0.906, 0.144)],
   ],
   INFERNO: [
     [0.0, new THREE.Color(0.077, 0.042, 0.206)],
@@ -74,12 +74,12 @@ const Gradients = {
     [0.7, new THREE.Color(0.969, 0.516, 0.063)],
     [0.8, new THREE.Color(0.988, 0.683, 0.072)],
     [0.9, new THREE.Color(0.961, 0.859, 0.298)],
-    [1.0, new THREE.Color(0.988, 0.998, 0.645)]
+    [1.0, new THREE.Color(0.988, 0.998, 0.645)],
   ],
   GRAYSCALE: [
     [0, new THREE.Color(0, 0, 0)],
-    [1, new THREE.Color(1, 1, 1)]
-  ]
+    [1, new THREE.Color(1, 1, 1)],
+  ],
 };
 
 export default Gradients;

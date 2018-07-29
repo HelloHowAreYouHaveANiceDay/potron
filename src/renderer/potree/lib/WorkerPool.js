@@ -9,11 +9,11 @@ class WorkerPool {
     }
 
     if (this.workers[url].length === 0) {
-      let worker = new Worker(url);
+      const worker = new Worker(url);
       this.workers[url].push(worker);
     }
 
-    let worker = this.workers[url].pop();
+    const worker = this.workers[url].pop();
 
     return worker;
   }
@@ -23,4 +23,4 @@ class WorkerPool {
   }
 }
 
-export default WorkerPool
+export default WorkerPool;

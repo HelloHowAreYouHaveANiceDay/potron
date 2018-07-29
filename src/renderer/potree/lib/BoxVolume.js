@@ -2,17 +2,16 @@ import * as THREE from 'three';
 import Volume from './Volume';
 
 class BoxVolume extends Volume {
-
   constructor(args = {}) {
     super(args);
 
     this.constructor.counter = (this.constructor.counter === undefined) ? 0 : this.constructor.counter + 1;
-    this.name = 'box_' + this.constructor.counter;
+    this.name = `box_${this.constructor.counter}`;
 
-    let boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
     boxGeometry.computeBoundingBox();
 
-    let boxFrameGeometry = new THREE.Geometry();
+    const boxFrameGeometry = new THREE.Geometry();
     {
       // bottom
       boxFrameGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0.5));
@@ -48,7 +47,7 @@ class BoxVolume extends Volume {
       transparent: true,
       opacity: 0.3,
       depthTest: true,
-      depthWrite: false
+      depthWrite: false,
     });
     this.box = new THREE.Mesh(boxGeometry, this.material);
     this.box.geometry.computeBoundingBox();
@@ -76,15 +75,15 @@ class BoxVolume extends Volume {
   }
 
   raycast(raycaster, intersects) {
-    let is = [];
+    const is = [];
     this.box.raycast(raycaster, is);
 
     if (is.length > 0) {
-      let I = is[0];
+      const I = is[0];
       intersects.push({
         distance: I.distance,
         object: this,
-        point: I.point.clone()
+        point: I.point.clone(),
       });
     }
   }
@@ -92,7 +91,6 @@ class BoxVolume extends Volume {
   getVolume() {
     return Math.abs(this.scale.x * this.scale.y * this.scale.z);
   }
-
 }
 
 export default BoxVolume;

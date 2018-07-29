@@ -2,7 +2,6 @@ import PointAttribute from './PointAttribute';
 import PointAttributeNames from './PointAttributeNames';
 
 export default class PointAttributes {
-
   constructor(pointAttributes) {
     this.attributes = [];
     this.byteSize = 0;
@@ -10,8 +9,8 @@ export default class PointAttributes {
 
     if (pointAttributes != null) {
       for (let i = 0; i < pointAttributes.length; i++) {
-        let pointAttributeName = pointAttributes[i];
-        let pointAttribute = PointAttribute[pointAttributeName];
+        const pointAttributeName = pointAttributes[i];
+        const pointAttribute = PointAttribute[pointAttributeName];
         this.attributes.push(pointAttribute);
         this.byteSize += pointAttribute.byteSize;
         this.size++;
@@ -24,22 +23,22 @@ export default class PointAttributes {
     this.attributes.push(pointAttribute);
     this.byteSize += pointAttribute.byteSize;
     this.size++;
-  };
+  }
 
   hasColors() {
-    for (let name in this.attributes) {
-      let pointAttribute = this.attributes[name];
+    for (const name in this.attributes) {
+      const pointAttribute = this.attributes[name];
       if (pointAttribute.name === PointAttributeNames.COLOR_PACKED) {
         return true;
       }
     }
 
     return false;
-  };
+  }
 
   hasNormals() {
-    for (let name in this.attributes) {
-      let pointAttribute = this.attributes[name];
+    for (const name in this.attributes) {
+      const pointAttribute = this.attributes[name];
       if (
         pointAttribute === PointAttribute.NORMAL_SPHEREMAPPED ||
         pointAttribute === PointAttribute.NORMAL_FLOATS ||
@@ -50,6 +49,5 @@ export default class PointAttributes {
     }
 
     return false;
-  };
-
+  }
 }

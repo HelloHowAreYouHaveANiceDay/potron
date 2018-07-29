@@ -8,35 +8,35 @@ export default class ProfileRequest {
     this.pointsServed = 0;
     this.highestLevelServed = 0;
 
-    this.priorityQueue = new BinaryHeap(function (x) { return 1 / x.weight; });
+    this.priorityQueue = new BinaryHeap((x => 1 / x.weight));
 
     this.initialize();
   }
 
   initialize() {
     this.priorityQueue.push({ node: this.pointcloud.pcoGeometry.root, weight: Infinity });
-  };
+  }
 
   // traverse the node and add intersecting descendants to queue
   traverse(node) {
-    let stack = [];
+    const stack = [];
     for (let i = 0; i < 8; i++) {
-      let child = node.children[i];
+      const child = node.children[i];
       if (child && this.pointcloud.nodeIntersectsProfile(child, this.profile)) {
         stack.push(child);
       }
     }
 
     while (stack.length > 0) {
-      let node = stack.pop();
-      let weight = node.boundingSphere.radius;
+      const node = stack.pop();
+      const weight = node.boundingSphere.radius;
 
-      this.priorityQueue.push({ node: node, weight: weight });
+      this.priorityQueue.push({ node, weight });
 
       // add children that intersect the cutting plane
       if (node.level < this.maxDepth) {
         for (let i = 0; i < 8; i++) {
-          let child = node.children[i];
+          const child = node.children[i];
           if (child && this.pointcloud.nodeIntersectsProfile(child, this.profile)) {
             stack.push(child);
           }
@@ -50,7 +50,7 @@ export default class ProfileRequest {
       this.updateGeneratorInstance = this.updateGenerator();
     }
 
-    let result = this.updateGeneratorInstance.next();
+    const result = this.updateGeneratorInstance.next();
     if (result.done) {
       this.updateGeneratorInstance = null;
     }
@@ -62,14 +62,14 @@ export default class ProfileRequest {
     // once loaded, add data to this.points and remove node from queue
     // only evaluate 1-50 nodes per frame to maintain responsiveness
 
-    let start = performance.now();
+    const start = performance.now();
 
-    let maxNodesPerUpdate = 1;
-    let intersectedNodes = [];
+    const maxNodesPerUpdate = 1;
+    const intersectedNodes = [];
 
     for (let i = 0; i < Math.min(maxNodesPerUpdate, this.priorityQueue.size()); i++) {
-      let element = this.priorityQueue.pop();
-      let node = element.node;
+      const element = this.priorityQueue.pop();
+      const node = element.node;
 
       if (node.level > this.maxDepth) {
         continue;
@@ -93,10 +93,9 @@ export default class ProfileRequest {
     }
 
     if (intersectedNodes.length > 0) {
-
-      for (let done of this.getPointsInsideProfile(intersectedNodes, this.temporaryResult)) {
+      for (const done of this.getPointsInsideProfile(intersectedNodes, this.temporaryResult)) {
         if (!done) {
-          //console.log("updateGenerator yields");
+          // console.log("updateGenerator yields");
           yield false;
         }
       }
@@ -118,14 +117,14 @@ export default class ProfileRequest {
 
       this.callback.onFinish({ request: this });
 
-      let index = this.pointcloud.profileRequests.indexOf(this);
+      const index = this.pointcloud.profileRequests.indexOf(this);
       if (index >= 0) {
         this.pointcloud.profileRequests.splice(index, 1);
       }
     }
 
     yield true;
-  };
+  }
 
   * getAccepted(numPoints, node, matrix, segment, segmentDir, points, totalMileage) {
     let checkpoint = performance.now();
@@ -135,25 +134,24 @@ export default class ProfileRequest {
     let acceptedPositions = new Float32Array(numPoints * 3);
     let numAccepted = 0;
 
-    let pos = new THREE.Vector3();
-    let svp = new THREE.Vector3();
+    const pos = new THREE.Vector3();
+    const svp = new THREE.Vector3();
 
-    let view = new Float32Array(node.geometry.attributes.position.array);
+    const view = new Float32Array(node.geometry.attributes.position.array);
 
     for (let i = 0; i < numPoints; i++) {
-
       pos.set(
         view[i * 3 + 0],
         view[i * 3 + 1],
         view[i * 3 + 2]);
 
       pos.applyMatrix4(matrix);
-      let distance = Math.abs(segment.cutPlane.distanceToPoint(pos));
-      let centerDistance = Math.abs(segment.halfPlane.distanceToPoint(pos));
+      const distance = Math.abs(segment.cutPlane.distanceToPoint(pos));
+      const centerDistance = Math.abs(segment.halfPlane.distanceToPoint(pos));
 
       if (distance < this.profile.width / 2 && centerDistance < segment.length / 2) {
         svp.subVectors(pos, segment.start);
-        let localMileage = segmentDir.dot(svp);
+        const localMileage = segmentDir.dot(svp);
 
         accepted[numAccepted] = i;
         mileage[numAccepted] = localMileage + totalMileage;
@@ -167,9 +165,9 @@ export default class ProfileRequest {
       }
 
       if ((i % 1000) === 0) {
-        let duration = performance.now() - checkpoint;
+        const duration = performance.now() - checkpoint;
         if (duration > 4) {
-          //console.log(`getAccepted yield after ${duration}ms`);
+          // console.log(`getAccepted yield after ${duration}ms`);
           yield false;
           checkpoint = performance.now();
         }
@@ -180,11 +178,11 @@ export default class ProfileRequest {
     mileage = mileage.subarray(0, numAccepted);
     acceptedPositions = acceptedPositions.subarray(0, numAccepted * 3);
 
-    //let end = performance.now();
-    //let duration = end - start;
-    //console.log("accepted duration ", duration)
+    // let end = performance.now();
+    // let duration = end - start;
+    // console.log("accepted duration ", duration)
 
-    //console.log(`getAccepted finished`);
+    // console.log(`getAccepted finished`);
 
     yield [accepted, mileage, acceptedPositions];
   }
@@ -195,59 +193,59 @@ export default class ProfileRequest {
 
     let pointsProcessed = 0;
 
-    for (let segment of target.segments) {
-      for (let node of nodes) {
-        let numPoints = node.numPoints;
-        let geometry = node.geometry;
+    for (const segment of target.segments) {
+      for (const node of nodes) {
+        const numPoints = node.numPoints;
+        const geometry = node.geometry;
 
         if (!numPoints) {
           continue;
         }
 
         { // skip if current node doesn't intersect current segment
-          let bbWorld = node.boundingBox.clone().applyMatrix4(this.pointcloud.matrixWorld);
-          let bsWorld = bbWorld.getBoundingSphere(new THREE.Sphere());
+          const bbWorld = node.boundingBox.clone().applyMatrix4(this.pointcloud.matrixWorld);
+          const bsWorld = bbWorld.getBoundingSphere(new THREE.Sphere());
 
-          let start = new THREE.Vector3(segment.start.x, segment.start.y, bsWorld.center.z);
-          let end = new THREE.Vector3(segment.end.x, segment.end.y, bsWorld.center.z);
+          const start = new THREE.Vector3(segment.start.x, segment.start.y, bsWorld.center.z);
+          const end = new THREE.Vector3(segment.end.x, segment.end.y, bsWorld.center.z);
 
-          let closest = new THREE.Line3(start, end).closestPointToPoint(bsWorld.center, true, new THREE.Vector3());
-          let distance = closest.distanceTo(bsWorld.center);
+          const closest = new THREE.Line3(start, end).closestPointToPoint(bsWorld.center, true, new THREE.Vector3());
+          const distance = closest.distanceTo(bsWorld.center);
 
-          let intersects = (distance < (bsWorld.radius + target.profile.width));
+          const intersects = (distance < (bsWorld.radius + target.profile.width));
 
           if (!intersects) {
             continue;
           }
         }
 
-        //{// DEBUG
+        // {// DEBUG
         //	console.log(node.name);
         //	let boxHelper = new Potree.Box3Helper(node.getBoundingBox());
         //	boxHelper.matrixAutoUpdate = false;
         //	boxHelper.matrix.copy(viewer.scene.pointclouds[0].matrixWorld);
         //	viewer.scene.scene.add(boxHelper);
-        //}
+        // }
 
-        let sv = new THREE.Vector3().subVectors(segment.end, segment.start).setZ(0);
-        let segmentDir = sv.clone().normalize();
+        const sv = new THREE.Vector3().subVectors(segment.end, segment.start).setZ(0);
+        const segmentDir = sv.clone().normalize();
 
-        let points = new Points();
+        const points = new Points();
 
-        let nodeMatrix = new THREE.Matrix4().makeTranslation(...node.boundingBox.min.toArray());
+        const nodeMatrix = new THREE.Matrix4().makeTranslation(...node.boundingBox.min.toArray());
 
-        let matrix = new THREE.Matrix4().multiplyMatrices(
+        const matrix = new THREE.Matrix4().multiplyMatrices(
           this.pointcloud.matrixWorld, nodeMatrix);
 
-        pointsProcessed = pointsProcessed + numPoints;
+        pointsProcessed += numPoints;
 
         let accepted = null;
         let mileage = null;
         let acceptedPositions = null;
-        for (let result of this.getAccepted(numPoints, node, matrix, segment, segmentDir, points, totalMileage)) {
+        for (const result of this.getAccepted(numPoints, node, matrix, segment, segmentDir, points, totalMileage)) {
           if (!result) {
-            let duration = performance.now() - checkpoint;
-            //console.log(`getPointsInsideProfile yield after ${duration}ms`);
+            const duration = performance.now() - checkpoint;
+            // console.log(`getPointsInsideProfile yield after ${duration}ms`);
             yield false;
             checkpoint = performance.now();
           } else {
@@ -255,39 +253,37 @@ export default class ProfileRequest {
           }
         }
 
-        let duration = performance.now() - checkpoint;
+        const duration = performance.now() - checkpoint;
         if (duration > 4) {
-          //console.log(`getPointsInsideProfile yield after ${duration}ms`);
+          // console.log(`getPointsInsideProfile yield after ${duration}ms`);
           yield false;
           checkpoint = performance.now();
         }
 
         points.data.position = acceptedPositions;
 
-        let relevantAttributes = Object.keys(geometry.attributes).filter(a => !["position", "indices"].includes(a));
-        for (let attributeName of relevantAttributes) {
-
-          let attribute = geometry.attributes[attributeName];
-          let numElements = attribute.array.length / numPoints;
+        const relevantAttributes = Object.keys(geometry.attributes).filter(a => !['position', 'indices'].includes(a));
+        for (const attributeName of relevantAttributes) {
+          const attribute = geometry.attributes[attributeName];
+          const numElements = attribute.array.length / numPoints;
 
           if (numElements !== parseInt(numElements)) {
             debugger;
           }
 
-          let Type = attribute.array.constructor;
+          const Type = attribute.array.constructor;
 
-          let filteredBuffer = new Type(numElements * accepted.length);
+          const filteredBuffer = new Type(numElements * accepted.length);
 
-          let source = attribute.array;
-          let target = filteredBuffer;
+          const source = attribute.array;
+          const target = filteredBuffer;
 
           for (let i = 0; i < accepted.length; i++) {
+            const index = accepted[i];
 
-            let index = accepted[i];
-
-            let start = index * numElements;
-            let end = start + numElements;
-            let sub = source.subarray(start, end);
+            const start = index * numElements;
+            const end = start + numElements;
+            const sub = source.subarray(start, end);
 
             target.set(sub, i * numElements);
           }
@@ -295,7 +291,7 @@ export default class ProfileRequest {
           points.data[attributeName] = filteredBuffer;
         }
 
-        points.data['mileage'] = mileage;
+        points.data.mileage = mileage;
         points.numPoints = accepted.length;
 
         segment.points.add(points);
@@ -304,13 +300,13 @@ export default class ProfileRequest {
       totalMileage += segment.length;
     }
 
-    for (let segment of target.segments) {
+    for (const segment of target.segments) {
       target.boundingBox.union(segment.points.boundingBox);
     }
 
-    //console.log(`getPointsInsideProfile finished`);
+    // console.log(`getPointsInsideProfile finished`);
     yield true;
-  };
+  }
 
   finishLevelThenCancel() {
     if (this.cancelRequested) {
@@ -320,17 +316,17 @@ export default class ProfileRequest {
     this.maxDepth = this.highestLevelServed;
     this.cancelRequested = true;
 
-    //console.log(`maxDepth: ${this.maxDepth}`);
-  };
+    // console.log(`maxDepth: ${this.maxDepth}`);
+  }
 
   cancel() {
     this.callback.onCancel();
 
-    this.priorityQueue = new BinaryHeap(function (x) { return 1 / x.weight; });
+    this.priorityQueue = new BinaryHeap((x => 1 / x.weight));
 
-    let index = this.pointcloud.profileRequests.indexOf(this);
+    const index = this.pointcloud.profileRequests.indexOf(this);
     if (index >= 0) {
       this.pointcloud.profileRequests.splice(index, 1);
     }
-  };
+  }
 }

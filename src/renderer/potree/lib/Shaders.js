@@ -1,7 +1,7 @@
-const 
-Shaders = {};
+const
+  Shaders = {};
 
-Shaders["pointcloud.vs"] = `
+Shaders['pointcloud.vs'] = `
 precision highp float;
 precision highp int;
 
@@ -790,7 +790,7 @@ if(u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0 || nc.x < -1.0 || nc.x > 1.0 || nc.y
 
 }
 `;
-Shaders["pointcloud.fs"] = `
+Shaders['pointcloud.fs'] = `
 #if defined paraboloid_point_shape
 #extension GL_EXT_frag_depth : enable
 #endif
@@ -889,7 +889,7 @@ gl_FragColor.xyz = gl_FragColor.xyz * weight;
 
 
 `;
-Shaders["pointcloud_sm.vs"] = `
+Shaders['pointcloud_sm.vs'] = `
 precision mediump float;
 precision mediump int;
 
@@ -1032,7 +1032,7 @@ gl_PointSize = pointSize;
 
 }
 `;
-Shaders["pointcloud_sm.fs"] = `
+Shaders['pointcloud_sm.fs'] = `
 precision mediump float;
 precision mediump int;
 
@@ -1050,7 +1050,7 @@ gl_FragColor = vec4(vLinearDepth, vLinearDepth / 30.0, vLinearDepth / 30.0, 1.0)
 
 
 `;
-Shaders["normalize.vs"] = `
+Shaders['normalize.vs'] = `
 precision mediump float;
 precision mediump int;
 
@@ -1066,7 +1066,7 @@ void main() {
 vUv = uv;
 gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
 }`;
-Shaders["normalize.fs"] = `
+Shaders['normalize.fs'] = `
 #extension GL_EXT_frag_depth : enable
 
 precision mediump float;
@@ -1095,7 +1095,7 @@ gl_FragDepthEXT = depth;
 
 
 }`;
-Shaders["normalize_and_edl.fs"] = `
+Shaders['normalize_and_edl.fs'] = `
 #extension GL_EXT_frag_depth : enable
 
 precision mediump float;
@@ -1154,7 +1154,7 @@ gl_FragColor = vec4(color.xyz, 1.0);
 
 gl_FragDepthEXT = depth;
 }`;
-Shaders["edl.vs"] = `
+Shaders['edl.vs'] = `
 
 varying vec2 vUv;
 
@@ -1165,7 +1165,7 @@ vec4 mvPosition = modelViewMatrix * vec4(position,1.0);
 
 gl_Position = projectionMatrix * mvPosition;
 }`;
-Shaders["edl.fs"] = `// 
+Shaders['edl.fs'] = `// 
 // adapted from the EDL shader code from Christian Boucheny in cloud compare:
 // https://github.com/cloudcompare/trunk/tree/master/plugins/qEDL/shaders/EDL
 //
@@ -1228,7 +1228,7 @@ gl_FragColor = vec4(cReg.rgb * shade, cReg.a);
 
 }
 `;
-Shaders["blur.vs"] = `
+Shaders['blur.vs'] = `
 varying vec2 vUv;
 
 void main() {
@@ -1236,7 +1236,7 @@ vUv = uv;
 
 gl_Position =   projectionMatrix * modelViewMatrix * vec4(position,1.0);
 }`;
-Shaders["blur.fs"] = `
+Shaders['blur.fs'] = `
 uniform mat4 projectionMatrix;
 
 uniform float screenWidth;

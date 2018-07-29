@@ -53,8 +53,8 @@ class PointCloudArena4DNode extends PointCloudTreeNode {
       return;
     }
 
-    let node = new PointCloudArena4DNode();
-    let sceneNode = THREE.PointCloud(geometryNode.geometry, this.kdtree.material);
+    const node = new PointCloudArena4DNode();
+    const sceneNode = THREE.PointCloud(geometryNode.geometry, this.kdtree.material);
     sceneNode.visible = false;
 
     node.kdtree = this.kdtree;
@@ -66,7 +66,7 @@ class PointCloudArena4DNode extends PointCloudTreeNode {
   }
 
   getChildren() {
-    let children = [];
+    const children = [];
 
     if (this.left) {
       children.push(this.left);

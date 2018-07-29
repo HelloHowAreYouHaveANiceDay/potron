@@ -1,7 +1,6 @@
 import EventDispatcher from './EventDispatcher';
 
 class PointCloudTreeNode extends EventDispatcher {
-
   constructor() {
     super();
     this.needsTransformUpdate = true;
