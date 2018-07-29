@@ -6,7 +6,7 @@
  * @author Connor Manning
  */
 
-import XHRFactory from './XHRFactory';
+import XHRFactory from '../XHRFactory';
 
 export default class GreyhoundUtils {
   static getQueryParam(name) {

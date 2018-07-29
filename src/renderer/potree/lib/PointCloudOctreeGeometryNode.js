@@ -3,6 +3,7 @@ import PointCloudTreeNode from './PointCloudTreeNode';
 import Potree from '../potree';
 import XHRFactory from './XHRFactory';
 import Utils from './Utils';
+import VueEventBus from '../VueEventBus';
 
 class PointCloudOctreeGeometryNode extends PointCloudTreeNode {
   constructor(name, pcoGeometry, boundingBox) {
@@ -107,7 +108,7 @@ class PointCloudOctreeGeometryNode extends PointCloudTreeNode {
     this.loading = true;
 
     Potree.numNodesLoading++;
-
+    // VueEventBus.$emit('OctreeGeometryLoading', this);
     if (this.pcoGeometry.loader.version.equalOrHigher('1.5')) {
       if ((this.level % this.pcoGeometry.hierarchyStepSize) === 0 && this.hasChildren) {
         this.loadHierachyThenPoints();
@@ -223,6 +224,7 @@ class PointCloudOctreeGeometryNode extends PointCloudTreeNode {
 
   dispose() {
     if (this.geometry && this.parent != null) {
+      // VueEventBus.$emit('octreeGeometryUnloading', this);
       this.geometry.dispose();
       this.geometry = null;
       this.loaded = false;

@@ -1,9 +1,9 @@
 
-
-import Version from './Version';
-import XHRFactory from './XHRFactory';
 import LasLazBatcher from './LasLazBatcher';
+
+import Version from '../Version';
 import { LASFile, LASDecoder } from '../laslaz';
+import XHRFactory from '../XHRFactory';
 
 export default class LasLazLoader {
   constructor(version) {

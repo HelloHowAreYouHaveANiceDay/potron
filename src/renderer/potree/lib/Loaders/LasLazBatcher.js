@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import Potree from '../potree';
+import Potree from '../../potree';
 
 export default class LasLazBatcher {
   constructor(node) {

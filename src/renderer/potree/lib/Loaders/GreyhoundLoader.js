@@ -3,10 +3,11 @@ import * as THREE from 'three';
 import GreyhoundUtils from './GreyhoundUtils';
 import PointAttribute from './PointAttribute';
 import PointAttributes from './PointAttributes';
-import Version from './Version';
 import GreyhoundBinaryLoader from './GreyhoundBinaryLoader';
-import PointCloudGreyhoundGeometry from './PointCloudGreyhoundGeometry';
-import PointCloudGreyhoundGeometryNode from './PointCloudGreyHoundGeometryNode';
+
+import Version from '../Version';
+import PointCloudGreyhoundGeometry from '../PointCloudGreyhoundGeometry';
+import PointCloudGreyhoundGeometryNode from '../PointCloudGreyHoundGeometryNode';
 
 export default class GreyhoundLoader {
   // constructor() {

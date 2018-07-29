@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 
-import Version from './Version';
-import XHRFactory from './XHRFactory';
+import Version from '../Version';
+import XHRFactory from '../XHRFactory';
 import PointAttributeNames from './PointAttributeNames';
 
-import Potree from '../potree';
+import Potree from '../../potree';
 
 export default class GreyhoundBinaryLoader {
   constructor(version, boundingBox, scale) {

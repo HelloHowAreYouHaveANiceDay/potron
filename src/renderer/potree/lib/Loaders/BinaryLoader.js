@@ -1,10 +1,12 @@
 import * as THREE from 'three';
 
-import XHRFactory from './XHRFactory';
-import Version from './Version';
+
 import PointAttributeNames from './PointAttributeNames';
 
-import Potree from '../potree';
+import XHRFactory from '../XHRFactory';
+import Version from '../Version';
+
+import Potree from '../../potree';
 
 export default class BinaryLoader {
   constructor(version, boundingBox, scale) {

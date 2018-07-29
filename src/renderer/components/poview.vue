@@ -99,7 +99,8 @@ export default {
 		// load a file from your disc or USB drive:
 		//Potree.loadPointCloud("C:/dev/workspaces/potree/develop/pointclouds/lion_takanawa/cloud.js", "Point Cloud Name", function(e){
 		
-		LoadPointCloud("static/pointclouds/index/cloud.js", "index", (e) => {
+		LoadPointCloud("static/pointclouds/index/cloud.js", "index")
+		.then((e) => {
 			let pointcloud = e.pointcloud;
 			let material = pointcloud.material;
 			this.viewer.scene.addPointCloud(pointcloud);
@@ -108,8 +109,9 @@ export default {
 			material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
 			material.shape = Potree.PointShape.SQUARE;
 			this.viewer.fitToScreen();
-		});
-		
+		}).catch((err)=>{
+			console.error(err);
+		})
 		// this.viewer.onGUILoaded(() => {
 		// 	let message = `
 		// 	Welcome to Potree Desktop.<br>

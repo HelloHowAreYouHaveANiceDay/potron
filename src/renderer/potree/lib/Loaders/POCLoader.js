@@ -3,15 +3,17 @@ import * as THREE from 'three';
 
 import PointAttribute from './PointAttribute';
 import PointAttributes from './PointAttributes';
-import XHRFactory from './XHRFactory';
-import PointCloudOctreeGeometryNode from './PointCloudOctreeGeometryNode';
-import PointCloudOctreeGeometry from './PointCloudOctreeGeometry';
-import Version from './Version';
 import LasLazLoader from './LasLazLoader';
 import BinaryLoader from './BinaryLoader';
-import Utils from './Utils';
+
+import PointCloudOctreeGeometryNode from '../PointCloudOctreeGeometryNode';
+import PointCloudOctreeGeometry from '../PointCloudOctreeGeometry';
+import XHRFactory from '../XHRFactory';
+import Version from '../Version';
+import Utils from '../Utils';
 
 export default class POCLoader {
+  // load from a cloud.js file
   static load(url, callback) {
     try {
       const pco = new PointCloudOctreeGeometry();
