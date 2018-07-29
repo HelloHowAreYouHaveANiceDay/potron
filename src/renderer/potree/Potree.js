@@ -127,17 +127,7 @@ const Potree = {};
 
 (
   function (global, factory) {
-    console.log('exports are', typeof exports);
-    console.log('module are', typeof module);
-    console.log('define are', typeof define);
-
-    // if (typeof exports === 'object' && typeof module !== 'undefined') {
-    //   factory(exports);
-    // } else if (typeof define === 'function' && define.amd) {
-    //   define(['exports'], factory);
-    // } else {
     (factory((Potree)));
-    // }
   }(this, ((exports) => {
     /**
        * @author mrdoob / http://mrdoob.com/ https://github.com/mrdoob/eventdispatcher.js
@@ -3233,52 +3223,13 @@ const Potree = {};
     const resourcePath = `${exports.scriptPath}/resources`;
     // let resourcePath = '/static/resources';
 
-
-    function loadPointCloud(path, name, callback) {
-      const loaded = function (pointcloud) {
-        pointcloud.name = name;
-        callback({ type: 'pointcloud_loaded', pointcloud });
-      };
-
-      // load pointcloud
-      if (!path) {
-        // TODO: callback? comment? Hello? Bueller? Anyone?
-      } else if (path.indexOf('greyhound://') === 0) {
-        // We check if the path string starts with 'greyhound:', if so we assume it's a greyhound server URL.
-        GreyhoundLoader.load(path, (geometry) => {
-          if (!geometry) {
-            // callback({type: 'loading_failed'});
-            console.error(new Error(`failed to load point cloud from URL: ${path}`));
-          } else {
-            const pointcloud = new PointCloudOctree(geometry);
-            loaded(pointcloud);
-          }
-        });
-      } else if (path.indexOf('cloud.js') > 0) {
-        POCLoader.load(path, (geometry) => {
-          if (!geometry) {
-            // callback({type: 'loading_failed'});
-            console.error(new Error(`failed to load point cloud from URL: ${path}`));
-          } else {
-            const pointcloud = new PointCloudOctree(geometry);
-            loaded(pointcloud);
-          }
-        });
-      } else if (path.indexOf('.vpc') > 0) {
-        PointCloudArena4DGeometry.load(path, (geometry) => {
-          if (!geometry) {
-            // callback({type: 'loading_failed'});
-            console.error(new Error(`failed to load point cloud from URL: ${path}`));
-          } else {
-            const pointcloud = new PointCloudArena4D(geometry);
-            loaded(pointcloud);
-          }
-        });
-      } else {
-        // callback({'type': 'loading_failed'});
-        console.error(new Error(`failed to load point cloud from URL: ${path}`));
-      }
-    }
+    /**
+     * Loads PointCloud from path
+     * @param {*} path path to file
+     * @param {*} name name of the pointcloud
+     * @param {*} callback event handler for return
+     */
+    
 
 
     // add selectgroup
@@ -3361,7 +3312,7 @@ const Potree = {};
     exports.maxNodesLoading = maxNodesLoading;
     exports.debug = debug;
     exports.resourcePath = resourcePath;
-    exports.loadPointCloud = loadPointCloud;
+    // exports.loadPointCloud = loadPointCloud;
     exports.Action = Action;
     exports.PathAnimation = PathAnimation;
     exports.AnimationPath = AnimationPath;

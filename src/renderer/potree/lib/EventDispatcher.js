@@ -1,3 +1,5 @@
+// import VueEventBus  from '../VueEventBus';
+
 
 export default class EventDispatcher {
   constructor() {
@@ -5,6 +7,7 @@ export default class EventDispatcher {
   }
 
   addEventListener(type, listener) {
+    // VueEventBus.$emit('listener added', type);
     const listeners = this._listeners;
 
     if (listeners[type] === undefined) {
@@ -42,6 +45,7 @@ export default class EventDispatcher {
   }
 
   dispatchEvent(event) {
+    // VueEventBus.$emit(event.type, event);
     const listeners = this._listeners;
     const listenerArray = listeners[event.type];
 

@@ -2,7 +2,7 @@
   <div>
 	<div class="potree_container" style="position: absolute; width: 100%; height: 100%; left: 0px; top: 0px; ">
 		<div id="potree_render_area"></div>
-		<div id="potree_sidebar_container"> </div>
+		<!-- <div id="potree_sidebar_container"> </div> -->
 	</div>
   </div> 
 </template>
@@ -11,6 +11,7 @@
 /* eslint-disable */
 import Vue from 'vue';
 import Potree from "../potree/potree";
+import LoadPointCloud from '../potree/lib/LoadPointCloud';
 import $ from 'jquery';
 import path from 'path';
 
@@ -93,12 +94,12 @@ export default {
 			$("#menu_appearance").next().show();
 			$("#menu_tools").next().show();
 			$("#menu_scene").next().show();
-			this.viewer.toggleSidebar();
+			// this.viewer.toggleSidebar();
 		});
 		// load a file from your disc or USB drive:
 		//Potree.loadPointCloud("C:/dev/workspaces/potree/develop/pointclouds/lion_takanawa/cloud.js", "Point Cloud Name", function(e){
 		
-		Potree.loadPointCloud("static/pointclouds/index/cloud.js", "index", (e) => {
+		LoadPointCloud("static/pointclouds/index/cloud.js", "index", (e) => {
 			let pointcloud = e.pointcloud;
 			let material = pointcloud.material;
 			this.viewer.scene.addPointCloud(pointcloud);
