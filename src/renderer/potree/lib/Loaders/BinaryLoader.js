@@ -72,7 +72,9 @@ export default class BinaryLoader {
 
     worker.onmessage = (e) => {
       const data = e.data;
+      
       console.log(data);
+
       const buffers = data.attributeBuffers;
       const tightBoundingBox = new THREE.Box3(
         new THREE.Vector3().fromArray(data.tightBoundingBox.min),
