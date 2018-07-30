@@ -1,12 +1,14 @@
 <template>
   <div id="wrapper">
     <!-- <img id="logo" src="~@/assets/logo.png" alt="electron-vue">
-    <main>
-      <div class="left-side">
+    
+   -->
+   <main>
+       <div class="left-side">
         <span class="title">
           Welcome to your new project!
         </span>
-      </div> -->
+      </div>
       <poview></poview>
     </main>
   </div>
