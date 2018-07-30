@@ -2,10 +2,13 @@ import * as THREE from 'three';
 
 import PointCloudTree from './PointCloudTree';
 import PointCloudMaterial from './PointCloudMaterial';
+import PointColorType from './PointColorType';
+import ClipTask from './ClipTask';
 import Utils from './Utils';
 import PointCloudOctreeNode from './PointCloudOctreeNode';
 import PointCloudOctreeGeometryNode from './PointCloudOctreeGeometryNode';
-import Potree from '../potree';
+import ProfileRequest from './ProfileRequest';
+// import Potree from '../potree';
 
 
 class PointCloudOctree extends PointCloudTree {
@@ -188,7 +191,7 @@ class PointCloudOctree extends PointCloudTree {
 
   computeVisibilityTextureData(nodes, camera) {
     // console.log('pointcloudoctree 184', camera);
-    if (Potree.measureTimings) performance.mark('computeVisibilityTextureData-start');
+    // if (Potree.measureTimings) performance.mark('computeVisibilityTextureData-start');
 
     const data = new Uint8Array(nodes.length * 4);
     const visibleNodeTextureOffsets = new Map();
@@ -266,12 +269,12 @@ class PointCloudOctree extends PointCloudTree {
       data[i * 4 + 3] = node.name.length - 1;
     }
 
-    const a = 10;
+    // const a = 10;
 
-    if (Potree.measureTimings) {
-      performance.mark('computeVisibilityTextureData-end');
-      performance.measure('render.computeVisibilityTextureData', 'computeVisibilityTextureData-start', 'computeVisibilityTextureData-end');
-    }
+    // if (Potree.measureTimings) {
+    //   performance.mark('computeVisibilityTextureData-end');
+    //   performance.measure('render.computeVisibilityTextureData', 'computeVisibilityTextureData-start', 'computeVisibilityTextureData-end');
+    // }
 
     return {
       data,
@@ -404,7 +407,7 @@ class PointCloudOctree extends PointCloudTree {
    */
   getPointsInProfile(profile, maxDepth, callback) {
     if (callback) {
-      const request = new Potree.ProfileRequest(this, profile, maxDepth, callback);
+      const request = new ProfileRequest(this, profile, maxDepth, callback);
       this.profileRequests.push(request);
 
       return request;
@@ -497,7 +500,7 @@ class PointCloudOctree extends PointCloudTree {
    *
    */
   getProfile(start, end, width, depth, callback) {
-    const request = new Potree.ProfileRequest(start, end, width, depth, callback);
+    const request = new ProfileRequest(start, end, width, depth, callback);
     this.profileRequests.push(request);
   }
 
@@ -546,8 +549,8 @@ class PointCloudOctree extends PointCloudTree {
     if (!this.pickState) {
       const scene = new THREE.Scene();
 
-      const material = new Potree.PointCloudMaterial();
-      material.pointColorType = Potree.PointColorType.POINT_INDEX;
+      const material = new PointCloudMaterial();
+      material.pointColorType = PointColorType.POINT_INDEX;
 
       const renderTarget = new THREE.WebGLRenderTarget(
         1, 1,
@@ -578,8 +581,8 @@ class PointCloudOctree extends PointCloudTree {
       pickMaterial.classification = this.material.classification;
       if (params.pickClipped) {
         pickMaterial.clipBoxes = this.material.clipBoxes;
-        if (this.material.clipTask === Potree.ClipTask.HIGHLIGHT) {
-          pickMaterial.clipTask = Potree.ClipTask.NONE;
+        if (this.material.clipTask === ClipTask.HIGHLIGHT) {
+          pickMaterial.clipTask = ClipTask.NONE;
         } else {
           pickMaterial.clipTask = this.material.clipTask;
         }
@@ -647,7 +650,7 @@ class PointCloudOctree extends PointCloudTree {
     for (let u = 0; u < pickWindowSize; u++) {
       for (let v = 0; v < pickWindowSize; v++) {
         const offset = (u + v * pickWindowSize);
-        const distance = Math.pow(u - (pickWindowSize - 1) / 2, 2) + Math.pow(v - (pickWindowSize - 1) / 2, 2); //
+        const distance = ((u - (pickWindowSize - 1) / 2) ** 2) + ((v - (pickWindowSize - 1) / 2) ** 2); //
 
         const pcIndex = pixels[4 * offset + 3];
         pixels[4 * offset + 3] = 0;
@@ -755,7 +758,7 @@ class PointCloudOctree extends PointCloudTree {
   }
 
   * getFittedBoxGen(boxNode) {
-    const start = performance.now();
+    // const start = performance.now();
 
     const shrinkedLocalBounds = new THREE.Box3();
     const worldToBox = new THREE.Matrix4().getInverse(boxNode.matrixWorld);
@@ -804,8 +807,8 @@ class PointCloudOctree extends PointCloudTree {
     const ds = new THREE.Vector3().subVectors(shrinkedLocalBounds.max, shrinkedLocalBounds.min);
     fitted.scale.multiply(ds);
 
-    const duration = performance.now() - start;
-    console.log('duration: ', duration);
+    // const duration = performance.now() - start;
+    // console.log('duration: ', duration);
 
     yield fitted;
   }
