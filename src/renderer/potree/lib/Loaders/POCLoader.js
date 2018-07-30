@@ -123,6 +123,7 @@ export default class POCLoader {
   }
 
   createChildAABB(aabb, index) {
+    console.log(index);
     const min = aabb.min.clone();
     const max = aabb.max.clone();
     const size = new THREE.Vector3().subVectors(max, min);

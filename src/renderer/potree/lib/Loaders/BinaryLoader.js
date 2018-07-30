@@ -25,11 +25,11 @@ export default class BinaryLoader {
       return;
     }
 
-    let url = node.getURL();
+    const url = `${node.getURL()}.bin`;
 
-    if (this.version.equalOrHigher('1.4')) {
-      url += '.bin';
-    }
+    // if (this.version.equalOrHigher('1.4')) {
+    // url += '.bin';
+    // }
 
     const xhr = XHRFactory.createXMLHttpRequest();
     xhr.open('GET', url, true);
@@ -56,19 +56,23 @@ export default class BinaryLoader {
   }
 
   parse(node, buffer) {
+    // parse octree node
     const pointAttributes = node.pcoGeometry.pointAttributes;
-    const numPoints = buffer.byteLength / node.pcoGeometry.pointAttributes.byteSize;
 
-    if (this.version.upTo('1.5')) {
-      node.numPoints = numPoints;
-    }
+    // somehow this works? need to figure out logic
+    // const numPoints = buffer.byteLength / node.pcoGeometry.pointAttributes.byteSize;
 
-    const workerPath = `${Potree.scriptPath}/workers/BinaryDecoderWorker.js`;
+    // if (this.version.upTo('1.5')) {
+    //   node.numPoints = numPoints;
+    // }
+
+    const workerPath = 'static/workers/BinaryDecoderWorker.js';
     // let workerPath = './Wor'
     const worker = Potree.workerPool.getWorker(workerPath);
 
-    worker.onmessage = function (e) {
+    worker.onmessage = (e) => {
       const data = e.data;
+      console.log(data);
       const buffers = data.attributeBuffers;
       const tightBoundingBox = new THREE.Box3(
         new THREE.Vector3().fromArray(data.tightBoundingBox.min),
@@ -76,32 +80,44 @@ export default class BinaryLoader {
       );
 
       Potree.workerPool.returnWorker(workerPath, worker);
-
+      // https://threejs.org/docs/#api/core/BufferGeometry
       const geometry = new THREE.BufferGeometry();
-
-      for (const property in buffers) {
+      const properties = Object.keys(buffers);
+      
+      for (let index = 0; index < properties.length; index++) {
+      
+        const property = properties[index];
         const buffer = buffers[property].buffer;
-
         if (parseInt(property) === PointAttributeNames.POSITION_CARTESIAN) {
-          geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(buffer), 3));
+          geometry.addAttribute('position',
+            new THREE.BufferAttribute(new Float32Array(buffer), 3));
         } else if (parseInt(property) === PointAttributeNames.COLOR_PACKED) {
-          geometry.addAttribute('color', new THREE.BufferAttribute(new Uint8Array(buffer), 4, true));
+          geometry.addAttribute('color',
+            new THREE.BufferAttribute(new Uint8Array(buffer), 4, true));
         } else if (parseInt(property) === PointAttributeNames.INTENSITY) {
-          geometry.addAttribute('intensity', new THREE.BufferAttribute(new Float32Array(buffer), 1));
+          geometry.addAttribute('intensity',
+            new THREE.BufferAttribute(new Float32Array(buffer), 1));
         } else if (parseInt(property) === PointAttributeNames.CLASSIFICATION) {
-          geometry.addAttribute('classification', new THREE.BufferAttribute(new Uint8Array(buffer), 1));
+          geometry.addAttribute('classification',
+            new THREE.BufferAttribute(new Uint8Array(buffer), 1));
         } else if (parseInt(property) === PointAttributeNames.RETURN_NUMBER) {
-          geometry.addAttribute('returnNumber', new THREE.BufferAttribute(new Uint8Array(buffer), 1));
+          geometry.addAttribute('returnNumber',
+            new THREE.BufferAttribute(new Uint8Array(buffer), 1));
         } else if (parseInt(property) === PointAttributeNames.NUMBER_OF_RETURNS) {
-          geometry.addAttribute('numberOfReturns', new THREE.BufferAttribute(new Uint8Array(buffer), 1));
+          geometry.addAttribute('numberOfReturns',
+            new THREE.BufferAttribute(new Uint8Array(buffer), 1));
         } else if (parseInt(property) === PointAttributeNames.SOURCE_ID) {
-          geometry.addAttribute('pointSourceID', new THREE.BufferAttribute(new Uint16Array(buffer), 1));
+          geometry.addAttribute('pointSourceID',
+            new THREE.BufferAttribute(new Uint16Array(buffer), 1));
         } else if (parseInt(property) === PointAttributeNames.NORMAL_SPHEREMAPPED) {
-          geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(buffer), 3));
+          geometry.addAttribute('normal',
+            new THREE.BufferAttribute(new Float32Array(buffer), 3));
         } else if (parseInt(property) === PointAttributeNames.NORMAL_OCT16) {
-          geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(buffer), 3));
+          geometry.addAttribute('normal',
+            new THREE.BufferAttribute(new Float32Array(buffer), 3));
         } else if (parseInt(property) === PointAttributeNames.NORMAL) {
-          geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(buffer), 3));
+          geometry.addAttribute('normal',
+            new THREE.BufferAttribute(new Float32Array(buffer), 3));
         } else if (parseInt(property) === PointAttributeNames.INDICES) {
           const bufferAttribute = new THREE.BufferAttribute(new Uint8Array(buffer), 4);
           bufferAttribute.normalized = true;
@@ -111,6 +127,39 @@ export default class BinaryLoader {
           geometry.addAttribute('spacing', bufferAttribute);
         }
       }
+
+      // for (const property in buffers) {
+      //   const buffer = buffers[property].buffer;
+
+      //   if (parseInt(property) === PointAttributeNames.POSITION_CARTESIAN) {
+      //     geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(buffer), 3));
+      //   } else if (parseInt(property) === PointAttributeNames.COLOR_PACKED) {
+      //     geometry.addAttribute('color', new THREE.BufferAttribute(new Uint8Array(buffer), 4, true));
+      //   } else if (parseInt(property) === PointAttributeNames.INTENSITY) {
+      //     geometry.addAttribute('intensity', new THREE.BufferAttribute(new Float32Array(buffer), 1));
+      //   } else if (parseInt(property) === PointAttributeNames.CLASSIFICATION) {
+      //     geometry.addAttribute('classification', new THREE.BufferAttribute(new Uint8Array(buffer), 1));
+      //   } else if (parseInt(property) === PointAttributeNames.RETURN_NUMBER) {
+      //     geometry.addAttribute('returnNumber', new THREE.BufferAttribute(new Uint8Array(buffer), 1));
+      //   } else if (parseInt(property) === PointAttributeNames.NUMBER_OF_RETURNS) {
+      //     geometry.addAttribute('numberOfReturns', new THREE.BufferAttribute(new Uint8Array(buffer), 1));
+      //   } else if (parseInt(property) === PointAttributeNames.SOURCE_ID) {
+      //     geometry.addAttribute('pointSourceID', new THREE.BufferAttribute(new Uint16Array(buffer), 1));
+      //   } else if (parseInt(property) === PointAttributeNames.NORMAL_SPHEREMAPPED) {
+      //     geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(buffer), 3));
+      //   } else if (parseInt(property) === PointAttributeNames.NORMAL_OCT16) {
+      //     geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(buffer), 3));
+      //   } else if (parseInt(property) === PointAttributeNames.NORMAL) {
+      //     geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(buffer), 3));
+      //   } else if (parseInt(property) === PointAttributeNames.INDICES) {
+      //     const bufferAttribute = new THREE.BufferAttribute(new Uint8Array(buffer), 4);
+      //     bufferAttribute.normalized = true;
+      //     geometry.addAttribute('indices', bufferAttribute);
+      //   } else if (parseInt(property) === PointAttributeNames.SPACING) {
+      //     const bufferAttribute = new THREE.BufferAttribute(new Float32Array(buffer), 1);
+      //     geometry.addAttribute('spacing', bufferAttribute);
+      //   }
+      // }
 
 
       tightBoundingBox.max.sub(tightBoundingBox.min);
