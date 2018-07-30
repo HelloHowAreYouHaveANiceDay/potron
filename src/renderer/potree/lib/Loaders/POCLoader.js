@@ -10,11 +10,13 @@ import PointCloudOctreeGeometryNode from '../PointCloudOctreeGeometryNode';
 import PointCloudOctreeGeometry from '../PointCloudOctreeGeometry';
 import XHRFactory from '../XHRFactory';
 import Version from '../Version';
-import Utils from '../Utils';
+// import Utils from '../Utils';
+// import VueEventBus from '../../VueEventBus';
 
 export default class POCLoader {
   // load from a cloud.js file
   static load(url, callback) {
+    // START OF TRY
     try {
       const pco = new PointCloudOctreeGeometry();
       pco.url = url;
@@ -22,31 +24,32 @@ export default class POCLoader {
       xhr.open('GET', url, true);
 
       xhr.onreadystatechange = () => {
+        // STATE 4 is DONE loading
         if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
-          const fMno = JSON.parse(xhr.responseText);
+          const pcConfig = JSON.parse(xhr.responseText);
 
-          const version = new Version(fMno.version);
+          const version = new Version(pcConfig.version);
 
           // assume octreeDir is absolute if it starts with http
-          if (fMno.octreeDir.indexOf('http') === 0) {
-            pco.octreeDir = fMno.octreeDir;
+          if (pcConfig.octreeDir.indexOf('http') === 0) {
+            pco.octreeDir = pcConfig.octreeDir;
           } else {
-            pco.octreeDir = `${url}/../${fMno.octreeDir}`;
+            pco.octreeDir = `${url}/../${pcConfig.octreeDir}`;
           }
 
-          pco.spacing = fMno.spacing;
-          pco.hierarchyStepSize = fMno.hierarchyStepSize;
+          pco.spacing = pcConfig.spacing;
+          pco.hierarchyStepSize = pcConfig.hierarchyStepSize;
+          // PointAtrributes are listed in PointAttributeNames;
+          pco.pointAttributes = pcConfig.pointAttributes;
 
-          pco.pointAttributes = fMno.pointAttributes;
-
-          const min = new THREE.Vector3(fMno.boundingBox.lx, fMno.boundingBox.ly, fMno.boundingBox.lz);
-          const max = new THREE.Vector3(fMno.boundingBox.ux, fMno.boundingBox.uy, fMno.boundingBox.uz);
+          const min = new THREE.Vector3(pcConfig.boundingBox.lx, pcConfig.boundingBox.ly, pcConfig.boundingBox.lz);
+          const max = new THREE.Vector3(pcConfig.boundingBox.ux, pcConfig.boundingBox.uy, pcConfig.boundingBox.uz);
           const boundingBox = new THREE.Box3(min, max);
           const tightBoundingBox = boundingBox.clone();
 
-          if (fMno.tightBoundingBox) {
-            tightBoundingBox.min.copy(new THREE.Vector3(fMno.tightBoundingBox.lx, fMno.tightBoundingBox.ly, fMno.tightBoundingBox.lz));
-            tightBoundingBox.max.copy(new THREE.Vector3(fMno.tightBoundingBox.ux, fMno.tightBoundingBox.uy, fMno.tightBoundingBox.uz));
+          if (pcConfig.tightBoundingBox) {
+            tightBoundingBox.min.copy(new THREE.Vector3(pcConfig.tightBoundingBox.lx, pcConfig.tightBoundingBox.ly, pcConfig.tightBoundingBox.lz));
+            tightBoundingBox.max.copy(new THREE.Vector3(pcConfig.tightBoundingBox.ux, pcConfig.tightBoundingBox.uy, pcConfig.tightBoundingBox.uz));
           }
 
           const offset = min.clone();
@@ -57,18 +60,18 @@ export default class POCLoader {
           tightBoundingBox.min.sub(offset);
           tightBoundingBox.max.sub(offset);
 
-          pco.projection = fMno.projection;
+          pco.projection = pcConfig.projection;
           pco.boundingBox = boundingBox;
           pco.tightBoundingBox = tightBoundingBox;
           pco.boundingSphere = boundingBox.getBoundingSphere(new THREE.Sphere());
           pco.tightBoundingSphere = tightBoundingBox.getBoundingSphere(new THREE.Sphere());
           pco.offset = offset;
-          if (fMno.pointAttributes === 'LAS') {
-            pco.loader = new LasLazLoader(fMno.version);
-          } else if (fMno.pointAttributes === 'LAZ') {
-            pco.loader = new LasLazLoader(fMno.version);
+          if (pcConfig.pointAttributes === 'LAS') {
+            pco.loader = new LasLazLoader(pcConfig.version);
+          } else if (pcConfig.pointAttributes === 'LAZ') {
+            pco.loader = new LasLazLoader(pcConfig.version);
           } else {
-            pco.loader = new BinaryLoader(fMno.version, boundingBox, fMno.scale);
+            pco.loader = new BinaryLoader(pcConfig.version, boundingBox, pcConfig.scale);
             pco.pointAttributes = new PointAttributes(pco.pointAttributes);
           }
 
@@ -76,13 +79,12 @@ export default class POCLoader {
 
           { // load root
             const name = 'r';
-
             const root = new PointCloudOctreeGeometryNode(name, pco, boundingBox);
             root.level = 0;
             root.hasChildren = true;
             root.spacing = pco.spacing;
             if (version.upTo('1.5')) {
-              root.numPoints = fMno.hierarchy[0][1];
+              root.numPoints = pcConfig.hierarchy[0][1];
             } else {
               root.numPoints = 0;
             }
@@ -90,36 +92,17 @@ export default class POCLoader {
             pco.root.load();
             nodes[name] = root;
           }
-
-          // load remaining hierarchy
-          if (version.upTo('1.4')) {
-            for (let i = 1; i < fMno.hierarchy.length; i++) {
-              const name = fMno.hierarchy[i][0];
-              const numPoints = fMno.hierarchy[i][1];
-              const index = parseInt(name.charAt(name.length - 1));
-              const parentName = name.substring(0, name.length - 1);
-              const parentNode = nodes[parentName];
-              const level = name.length - 1;
-              // let boundingBox = POCLoader.createChildAABB(parentNode.boundingBox, index);
-              const boundingBox = Utils.createChildAABB(parentNode.boundingBox, index);
-
-              const node = new PointCloudOctreeGeometryNode(name, pco, boundingBox);
-              node.level = level;
-              node.numPoints = numPoints;
-              node.spacing = pco.spacing / Math.pow(2, level);
-              parentNode.addChild(node);
-              nodes[name] = node;
-            }
-          }
-
+          
           pco.nodes = nodes;
-
+          // console.log('nodes', pco.nodes);
           callback(pco);
         }
       };
 
       xhr.send(null);
     } catch (e) {
+      // END OF TRY CATCH
+
       console.log(`loading failed: '${url}'`);
       console.log(e);
 

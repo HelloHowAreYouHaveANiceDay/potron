@@ -3,7 +3,7 @@ import PointCloudTreeNode from './PointCloudTreeNode';
 import Potree from '../potree';
 import XHRFactory from './XHRFactory';
 import Utils from './Utils';
-import VueEventBus from '../VueEventBus';
+// import VueEventBus from '../VueEventBus';
 
 class PointCloudOctreeGeometryNode extends PointCloudTreeNode {
   constructor(name, pcoGeometry, boundingBox) {

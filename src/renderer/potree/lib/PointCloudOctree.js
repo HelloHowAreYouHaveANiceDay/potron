@@ -64,6 +64,12 @@ class PointCloudOctree extends PointCloudTree {
     return this.name;
   }
 
+
+  /**
+   *
+   * @param {*} geometryNode
+   * @param {*} parent
+   */
   toTreeNode(geometryNode, parent) {
     const node = new PointCloudOctreeNode();
 
@@ -130,7 +136,7 @@ class PointCloudOctree extends PointCloudTree {
       parent.children[childIndex] = node;
     }
 
-    const disposeListener = function () {
+    const disposeListener = () => {
       const childIndex = parseInt(geometryNode.name[geometryNode.name.length - 1]);
       parent.sceneNode.remove(node.sceneNode);
       parent.children[childIndex] = geometryNode;
@@ -636,7 +642,7 @@ class PointCloudOctree extends PointCloudTree {
     const ibuffer = new Uint32Array(buffer.buffer);
 
     // find closest hit inside pixelWindow boundaries
-    const min = Number.MAX_VALUE;
+    // const min = Number.MAX_VALUE;
     const hits = [];
     for (let u = 0; u < pickWindowSize; u++) {
       for (let v = 0; v < pickWindowSize; v++) {

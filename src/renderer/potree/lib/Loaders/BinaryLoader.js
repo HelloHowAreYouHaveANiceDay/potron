@@ -36,7 +36,9 @@ export default class BinaryLoader {
     xhr.responseType = 'arraybuffer';
     xhr.overrideMimeType('text/plain; charset=x-user-defined');
     xhr.onreadystatechange = () => {
+      // STATE 4 === DONE
       if (xhr.readyState === 4) {
+        // STATE 0 === UNSENT
         if ((xhr.status === 200 || xhr.status === 0) && xhr.response !== null) {
           const buffer = xhr.response;
           this.parse(node, buffer);
@@ -49,7 +51,7 @@ export default class BinaryLoader {
     try {
       xhr.send(null);
     } catch (e) {
-      console.log(`fehler beim laden der punktwolke: ${e}`);
+      console.log(`error loading pointcloud: ${e}`);
     }
   }
 
